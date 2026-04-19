@@ -148,7 +148,7 @@ html[dir=ltr] .div-or::before{left:0;}html[dir=ltr] .div-or::after{right:0;}
     <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="أودع بالبطاقة البنكية بالدرهم أو الريال" data-en="Deposit by card in AED, SAR, or USD">أودع بالبطاقة البنكية بالدرهم أو الريال</div></div>
     <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="بلا KYC — بلا أوراق — بلا انتظار" data-en="No KYC — no paperwork — no waiting">بلا KYC — بلا أوراق — بلا انتظار</div></div>
     <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="رافعة مالية 50× على 140+ سوق" data-en="50× leverage on 140+ markets">رافعة مالية 50× على 140+ سوق</div></div>
-    <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="صدّر محفظتك إلى MetaMask في أي وقت" data-en="Export your wallet to MetaMask anytime">صدّر محفظتك إلى MetaMask في أي وقت</div></div>
+    <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="محفظتك محمية بتشفير AES-256 عسكري المستوى" data-en="Your wallet secured with military-grade AES-256 encryption">محفظتك محمية بتشفير AES-256 عسكري المستوى</div></div>
   </div>
   <div class="left-footer" data-ar="© 2025 نهار للتداول. جميع الحقوق محفوظة." data-en="© 2025 Nahaar Trading. All rights reserved.">© 2025 نهار للتداول. جميع الحقوق محفوظة.</div>
 </div>
@@ -198,12 +198,7 @@ html[dir=ltr] .div-or::before{left:0;}html[dir=ltr] .div-or::after{right:0;}
       <label for="terms"><span data-ar="أوافق على " data-en="I agree to the ">أوافق على </span><a href="#" data-ar="شروط الاستخدام" data-en="Terms of Use">شروط الاستخدام</a><span data-ar=" و" data-en=" and "> و</span><a href="#" data-ar="سياسة الخصوصية" data-en="Privacy Policy">سياسة الخصوصية</a></label>
     </div>
     <button class="btn-g" onclick="doStep1()" data-ar="متابعة ←" data-en="Continue →">متابعة ←</button>
-    <div class="div-or" data-ar="أو ادخل بمحفظتك الحالية" data-en="or connect your existing wallet">أو ادخل بمحفظتك الحالية</div>
-    <div class="w-opts">
-      <button class="w-opt" onclick="wConn('MetaMask')"><span class="w-icon">🦊</span><span class="w-name">MetaMask</span></button>
-      <button class="w-opt" onclick="wConn('WalletConnect')"><span class="w-icon">🔵</span><span class="w-name">WalletConnect</span></button>
-      <button class="w-opt" onclick="wConn('Coinbase')"><span class="w-icon">🔷</span><span class="w-name">Coinbase</span></button>
-    </div>
+
   </div>
 
   <!-- SCREEN 2: OTP -->
@@ -238,8 +233,8 @@ html[dir=ltr] .div-or::before{left:0;}html[dir=ltr] .div-or::after{right:0;}
       <h2 style="font-size:22px;font-weight:800;margin-bottom:6px;" data-ar="تم إنشاء حسابك!" data-en="Your account is ready!">تم إنشاء حسابك!</h2>
       <p style="font-size:14px;color:var(--muted2);margin-bottom:12px;" data-ar="تم إنشاء محفظة بلوكشين خاصة بك تلقائياً" data-en="A blockchain wallet was automatically created for you">تم إنشاء محفظة بلوكشين خاصة بك تلقائياً</p>
       <span class="wc-tag" data-ar="محفظة نشطة ✓" data-en="Wallet active ✓">محفظة نشطة ✓</span>
-      <div class="wc-addr">0x3f8aC4d2...b9A07F6c5D</div>
-      <p class="wc-note" data-ar="هذا عنوان محفظتك على البلوكشين. يمكنك لاحقاً تصديرها إلى MetaMask للتحكم الكامل بمفاتيحك الخاصة." data-en="This is your blockchain wallet address. You can export it to MetaMask later for full control over your private keys.">هذا عنوان محفظتك على البلوكشين. يمكنك لاحقاً تصديرها إلى MetaMask للتحكم الكامل بمفاتيحك الخاصة.</p>
+      <div class="wc-addr" id="walletAddrDisplay">جارٍ تحميل عنوان المحفظة...</div>
+      <p class="wc-note" data-ar="هذا عنوان محفظتك على البلوكشين. محفوظ بأمان تام. يمكنك الإيداع مباشرة على هذا العنوان." data-en="This is your personal blockchain wallet address. Fully secured. You can deposit directly to this address.">هذا عنوان محفظتك على البلوكشين. محفوظ بأمان تام. يمكنك الإيداع مباشرة على هذا العنوان.</p>
       <button class="btn-g" onclick="goSc(4)" data-ar="أودع الآن وابدأ التداول ←" data-en="Deposit now & start trading →">أودع الآن وابدأ التداول ←</button>
       <button class="btn-o" onclick="location.href='trade.html'" data-ar="تخطّ — أودع لاحقاً" data-en="Skip — deposit later">تخطّ — أودع لاحقاً</button>
     </div>
@@ -445,10 +440,12 @@ async function doVerify(){
     localStorage.setItem('nahaar_token', data.token);
     localStorage.setItem('nahaar_user', JSON.stringify(data.user));
 
-    // Show wallet address on screen 3
-    const addrEl=document.querySelector('#sc3 .wc-addr');
-    if(addrEl&&data.user.walletAddress){
-      addrEl.textContent=data.user.walletAddress;
+    // Show real wallet address from backend
+    const addrEl = document.getElementById('walletAddrDisplay');
+    if(addrEl && data.user.walletAddress){
+      const addr = data.user.walletAddress;
+      // Show full address
+      addrEl.textContent = addr;
     }
 
     goSc(3);
