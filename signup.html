@@ -321,10 +321,14 @@ html[dir=ltr] .div-or::before{left:0;}html[dir=ltr] .div-or::after{right:0;}
 </div>
 
 <script>
+// ── CONFIG ────────────────────────────────────────────
+const API = 'https://nahaar-api.up.railway.app';
+
 const LANG_KEY='nahaar_lang';
 let lang=localStorage.getItem(LANG_KEY)||'ar';
 let userEmail='';
 
+// ── LANGUAGE ──────────────────────────────────────────
 function setLang(l){
   lang=l;localStorage.setItem(LANG_KEY,l);
   const html=document.documentElement;
@@ -335,13 +339,12 @@ function setLang(l){
 }
 function setPlaceholders(){
   const ar=lang==='ar';
-  const ei=document.getElementById('emailIn');
-  if(ei)ei.placeholder=ar?'ahmed@example.com':'john@example.com';
-  const pi=document.getElementById('pwdIn');
-  if(pi)pi.placeholder=ar?'8 أحرف على الأقل':'Min. 8 characters';
-  const ci=document.getElementById('cpwdIn');
-  if(ci)ci.placeholder=ar?'أعد كلمة المرور':'Repeat password';
+  const ei=document.getElementById('emailIn');if(ei)ei.placeholder=ar?'ahmed@example.com':'john@example.com';
+  const pi=document.getElementById('pwdIn');if(pi)pi.placeholder=ar?'8 أحرف على الأقل':'Min. 8 characters';
+  const ci=document.getElementById('cpwdIn');if(ci)ci.placeholder=ar?'أعد كلمة المرور':'Repeat password';
 }
+
+// ── STEPS ─────────────────────────────────────────────
 function goSc(n){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('sc'+n).classList.add('active');
@@ -360,7 +363,9 @@ function chkStr(v){
   f.style.width=Math.min(100,s*20)+'%';
   f.style.background=s<=1?'#E84545':s<=3?'#E8A045':'#2ECC8A';
 }
-function doStep1(){
+
+// ── STEP 1: SIGNUP → calls real API ───────────────────
+async function doStep1(){
   const email=document.getElementById('emailIn').value;
   const pwd=document.getElementById('pwdIn').value;
   const cpwd=document.getElementById('cpwdIn').value;
@@ -372,28 +377,106 @@ function doStep1(){
   if(pwd!==cpwd){document.getElementById('cpwdErr').style.display='block';ok=false;}
   if(!terms){alert(lang==='ar'?'يرجى الموافقة على الشروط':'Please accept the terms');ok=false;}
   if(!ok)return;
-  userEmail=email;
-  document.getElementById('otpEM').textContent=email;
-  goSc(2);
+
+  const btn=document.querySelector('#sc1 .btn-g');
+  btn.textContent=lang==='ar'?'جارٍ إنشاء الحساب...':'Creating account...';
+  btn.disabled=true;
+
+  try {
+    const res=await fetch(`${API}/api/auth/signup`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,password:pwd,lang})
+    });
+    const data=await res.json();
+
+    if(!res.ok){
+      btn.disabled=false;
+      btn.setAttribute('data-ar','متابعة ←');btn.setAttribute('data-en','Continue →');
+      setLang(lang);
+      if(data.error&&data.error.includes('already exists')){
+        document.getElementById('emailErr').textContent=lang==='ar'?'هذا البريد مسجّل بالفعل — سجّل دخولك':'This email is already registered — sign in instead';
+        document.getElementById('emailErr').style.display='block';
+      } else {
+        alert(data.error||'Something went wrong');
+      }
+      return;
+    }
+
+    userEmail=email;
+    document.getElementById('otpEM').textContent=email;
+    goSc(2);
+
+  } catch(err){
+    btn.disabled=false;
+    btn.setAttribute('data-ar','متابعة ←');btn.setAttribute('data-en','Continue →');
+    setLang(lang);
+    alert(lang==='ar'?'خطأ في الاتصال بالخادم. تحقق من اتصالك.':'Connection error. Please check your internet.');
+  }
 }
-function doVerify(){
+
+// ── STEP 2: VERIFY OTP → calls real API ───────────────
+async function doVerify(){
   const code=document.getElementById('otpIn').value;
   document.getElementById('otpErr').style.display='none';
   if(code.length<6)return;
+
   const btn=document.getElementById('verBtn');
   btn.textContent=lang==='ar'?'جارٍ التحقق...':'Verifying...';
   btn.disabled=true;
-  setTimeout(()=>{
-    btn.disabled=false;
-    // any 6-digit code works except 000000 (demo error case)
-    if(code==='000000'){document.getElementById('otpErr').style.display='block';setLang(lang);return;}
+
+  try {
+    const res=await fetch(`${API}/api/auth/verify-otp`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:userEmail,otp:code})
+    });
+    const data=await res.json();
+
+    if(!res.ok){
+      btn.disabled=false;
+      btn.setAttribute('data-ar','تحقق ←');btn.setAttribute('data-en','Verify →');
+      setLang(lang);
+      document.getElementById('otpErr').style.display='block';
+      return;
+    }
+
+    // Save token + user info
+    localStorage.setItem('nahaar_token', data.token);
+    localStorage.setItem('nahaar_user', JSON.stringify(data.user));
+
+    // Show wallet address on screen 3
+    const addrEl=document.querySelector('#sc3 .wc-addr');
+    if(addrEl&&data.user.walletAddress){
+      addrEl.textContent=data.user.walletAddress;
+    }
+
     goSc(3);
-  },1200);
+
+  } catch(err){
+    btn.disabled=false;
+    btn.setAttribute('data-ar','تحقق ←');btn.setAttribute('data-en','Verify →');
+    setLang(lang);
+    alert(lang==='ar'?'خطأ في الاتصال بالخادم':'Connection error');
+  }
 }
-function resend(){
+
+// ── RESEND OTP → calls real API ───────────────────────
+async function resend(){
   document.getElementById('otpIn').value='';
-  alert(lang==='ar'?'تم إرسال رمز جديد إلى '+userEmail:'New code sent to '+userEmail);
+  try {
+    await fetch(`${API}/api/auth/resend-otp`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:userEmail,lang})
+    });
+    alert(lang==='ar'?'تم إرسال رمز جديد إلى '+userEmail:'New code sent to '+userEmail);
+  } catch(e){
+    alert(lang==='ar'?'فشل إرسال الرمز':'Failed to resend code');
+  }
 }
+
+// ── DEPOSIT ───────────────────────────────────────────
 function showDep(m){
   document.getElementById('mCard').style.display=m==='card'?'block':'none';
   document.getElementById('mCrypto').style.display=m==='crypto'?'block':'none';
@@ -402,22 +485,32 @@ function showDep(m){
 }
 function onramp(name){
   alert(lang==='ar'
-    ?`جاري فتح ${name}...\n\nفي النسخة المباشرة: ستُفتح نافذة دفع ${name} مباشرة داخل نهار. يشتري المستخدم USDC بعملته المحلية وتصل تلقائياً إلى محفظته خلال ثوانٍ.`
-    :`Opening ${name}...\n\nIn production: ${name}'s payment widget opens inline inside Nahaar. The user buys USDC in their local currency and it arrives automatically in their wallet within seconds.`);
+    ?`جاري فتح ${name}...\n\nسيُفتح نظام الدفع قريباً داخل نهار مباشرةً.`
+    :`Opening ${name}...\n\nThe payment widget will open inline inside Nahaar.`);
 }
 function cpAddr(){
-  navigator.clipboard.writeText('0x3f8aC4d2E1B9A07F6c5D4e2F7b9A0c3D8e1F4a2').catch(()=>{});
+  const user=JSON.parse(localStorage.getItem('nahaar_user')||'{}');
+  const addr=user.walletAddress||'0x3f8aC4d2E1B9A07F6c5D4e2F7b9A0c3D8e1F4a2';
+  navigator.clipboard.writeText(addr).catch(()=>{});
   const btn=document.getElementById('cpBtn');
   const orig=btn.textContent;
   btn.textContent=lang==='ar'?'تم النسخ ✓':'Copied ✓';
   btn.style.color='var(--green)';btn.style.borderColor='var(--green)';
   setTimeout(()=>{btn.textContent=orig;btn.style.color='';btn.style.borderColor='';},2000);
 }
-function wConn(name){
+
+// ── WALLET CONNECT ────────────────────────────────────
+async function wConn(name){
   alert(lang==='ar'
     ?`جاري الاتصال بـ ${name}...\n\nفي النسخة المباشرة: يُطلب توقيع رسالة للمصادقة دون الحاجة لكلمة مرور.`
-    :`Connecting ${name}...\n\nIn production: requests a wallet signature to authenticate. No password needed.`);
+    :`Connecting ${name}...\n\nIn production: requests a wallet signature to authenticate.`);
 }
+
+// ── CHECK IF ALREADY LOGGED IN ────────────────────────
+if(localStorage.getItem('nahaar_token')){
+  window.location.href='trade.html';
+}
+
 setLang(lang);
 </script>
 </body>

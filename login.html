@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>نهار — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#07080A;--surface:#0D0F14;--surface2:#13161D;--border:rgba(212,175,55,0.08);--border2:rgba(212,175,55,0.18);--border3:rgba(212,175,55,0.32);--gold:#D4AF37;--gold2:#F0D060;--gold3:#A8882A;--gold-dim:rgba(212,175,55,0.10);--red:#E84545;--text:#F2EDD7;--muted:#6B6550;--muted2:#9D9478;--font-ar:'Tajawal',sans-serif;--font-en:'Syne',sans-serif;--mono:'DM Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ar);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+body.en{font-family:var(--font-en);}
+.bg-pattern{position:fixed;inset:0;opacity:0.025;background-image:repeating-linear-gradient(45deg,var(--gold) 0,var(--gold) 1px,transparent 0,transparent 50%),repeating-linear-gradient(-45deg,var(--gold) 0,var(--gold) 1px,transparent 0,transparent 50%);background-size:40px 40px;pointer-events:none;}
+.bg-glow{position:fixed;width:600px;height:600px;background:radial-gradient(circle,rgba(212,175,55,0.06) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+.login-box{width:440px;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:44px;position:relative;z-index:1;}
+.login-box::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-top:1px solid var(--border3);border-radius:0 20px 0 0;opacity:0.4;}
+html[dir=rtl] .login-box::before{border-right:1px solid var(--border3);}
+html[dir=ltr] .login-box::before{border-left:1px solid var(--border3);right:auto;left:0;}
+.login-box::after{content:'';position:absolute;bottom:0;left:0;width:80px;height:80px;border-bottom:1px solid var(--border3);border-radius:0 0 0 20px;opacity:0.4;}
+html[dir=rtl] .login-box::after{border-left:1px solid var(--border3);}
+html[dir=ltr] .login-box::after{border-right:1px solid var(--border3);left:auto;right:0;}
+.top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.login-logo{font-size:26px;font-weight:900;color:var(--gold);}
+.lang-toggle{display:flex;align-items:center;gap:0;border:1px solid var(--border2);border-radius:8px;overflow:hidden;cursor:pointer;}
+.lang-btn{padding:5px 11px;font-size:12px;font-weight:700;font-family:var(--mono);transition:all 0.2s;color:var(--muted);}
+.lang-btn.active{background:var(--gold-dim);color:var(--gold);}
+.lang-divider{width:1px;height:18px;background:var(--border2);}
+.login-title{font-size:22px;font-weight:800;margin-bottom:5px;}
+.login-sub{font-size:14px;color:var(--muted2);margin-bottom:22px;}
+.login-sub a{color:var(--gold);text-decoration:none;}
+.wallet-opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.wallet-opt{padding:12px 8px;border:1px solid var(--border2);border-radius:10px;background:transparent;color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.wallet-opt:hover{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);}
+.wo-icon{font-size:20px;}
+.wo-name{font-size:10px;color:var(--muted2);font-family:var(--mono);}
+.divider{text-align:center;font-size:11px;color:var(--muted);margin:14px 0;font-family:var(--mono);position:relative;}
+.divider::before{content:'';position:absolute;top:50%;width:44%;height:1px;background:var(--border);}
+.divider::after{content:'';position:absolute;top:50%;width:44%;height:1px;background:var(--border);}
+html[dir=rtl] .divider::before{right:0;}html[dir=rtl] .divider::after{left:0;}
+html[dir=ltr] .divider::before{left:0;}html[dir=ltr] .divider::after{right:0;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:11px;font-weight:600;letter-spacing:0.05em;color:var(--muted2);margin-bottom:7px;text-transform:uppercase;font-family:var(--mono);}
+.form-input{width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:all 0.2s;}
+.form-input:focus{border-color:var(--gold);}
+.form-input::placeholder{color:var(--muted);}
+.input-wrap{position:relative;}
+html[dir=rtl] .eye-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;cursor:pointer;}
+html[dir=ltr] .eye-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;cursor:pointer;}
+html[dir=rtl] .form-input.with-eye{padding-left:44px;}
+html[dir=ltr] .form-input.with-eye{padding-right:44px;}
+.form-footer{display:flex;margin-top:-6px;margin-bottom:16px;}
+html[dir=rtl] .form-footer{justify-content:flex-start;}
+html[dir=ltr] .form-footer{justify-content:flex-end;}
+.forgot{font-size:12px;color:var(--gold);text-decoration:none;}
+.submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.2s;}
+.submit-btn:hover{background:linear-gradient(135deg,var(--gold2),var(--gold));transform:translateY(-1px);box-shadow:0 8px 20px rgba(212,175,55,0.2);}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.error-box{background:rgba(232,69,69,0.08);border:1px solid rgba(232,69,69,0.25);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none;}
+.back-home{text-align:center;margin-top:16px;}
+.back-home a{font-size:13px;color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.back-home a:hover{color:var(--muted2);}
+</style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+<div class="bg-glow"></div>
+<div class="login-box">
+  <div class="top-row">
+    <div class="login-logo" data-ar="نهار" data-en="Nahaar">نهار</div>
+    <div class="lang-toggle">
+      <div class="lang-btn active" id="btnAr" onclick="setLang('ar')">AR</div>
+      <div class="lang-divider"></div>
+      <div class="lang-btn" id="btnEn" onclick="setLang('en')">EN</div>
+    </div>
+  </div>
+  <div class="login-title" data-ar="مرحباً بعودتك" data-en="Welcome Back">مرحباً بعودتك</div>
+  <p class="login-sub"><span data-ar="ليس لديك حساب؟ " data-en="No account? ">ليس لديك حساب؟ </span><a href="signup.html" data-ar="إنشاء حساب مجاني" data-en="Create one free">إنشاء حساب مجاني</a></p>
+  <div class="wallet-opts">
+    <button class="wallet-opt" onclick="walletLogin('MetaMask')"><span class="wo-icon">🦊</span><span class="wo-name">MetaMask</span></button>
+    <button class="wallet-opt" onclick="walletLogin('WalletConnect')"><span class="wo-icon">🔵</span><span class="wo-name">WalletConnect</span></button>
+    <button class="wallet-opt" onclick="walletLogin('Coinbase')"><span class="wo-icon">🔷</span><span class="wo-name">Coinbase</span></button>
+  </div>
+  <div class="divider" data-ar="أو بالبريد الإلكتروني" data-en="or with email">أو بالبريد الإلكتروني</div>
+  <div class="error-box" id="errorBox" data-ar="البريد الإلكتروني أو كلمة المرور غير صحيحة." data-en="Invalid email or password. Please try again.">البريد الإلكتروني أو كلمة المرور غير صحيحة.</div>
+  <form onsubmit="handleLogin(event)">
+    <div class="form-group">
+      <label data-ar="البريد الإلكتروني" data-en="Email">البريد الإلكتروني</label>
+      <input class="form-input" type="email" id="email" required/>
+    </div>
+    <div class="form-group">
+      <label data-ar="كلمة المرور" data-en="Password">كلمة المرور</label>
+      <div class="input-wrap">
+        <input class="form-input with-eye" type="password" id="password" required/>
+        <span class="eye-icon" onclick="togglePwd()">👁</span>
+      </div>
+    </div>
+    <div class="form-footer"><a href="#" class="forgot" data-ar="نسيت كلمة المرور؟" data-en="Forgot password?">نسيت كلمة المرور؟</a></div>
+    <button type="submit" class="submit-btn" id="loginBtn" data-ar="تسجيل الدخول" data-en="Sign In">تسجيل الدخول</button>
+  </form>
+  <div class="back-home"><a href="index.html" data-ar="← العودة للرئيسية" data-en="← Back to home">← العودة للرئيسية</a></div>
+</div>
+<script>
+const API = 'https://nahaar-api.up.railway.app';
+const LANG_KEY='nahaar_lang';
+let currentLang=localStorage.getItem(LANG_KEY)||'ar';
+
+function setLang(lang){
+  currentLang=lang;localStorage.setItem(LANG_KEY,lang);
+  const html=document.documentElement;
+  if(lang==='ar'){html.setAttribute('lang','ar');html.setAttribute('dir','rtl');document.body.classList.remove('en');document.getElementById('btnAr').classList.add('active');document.getElementById('btnEn').classList.remove('active');}
+  else{html.setAttribute('lang','en');html.setAttribute('dir','ltr');document.body.classList.add('en');document.getElementById('btnEn').classList.add('active');document.getElementById('btnAr').classList.remove('active');}
+  document.querySelectorAll('[data-ar]').forEach(el=>{const txt=el.getAttribute('data-'+lang);if(txt){if(txt.includes('<br/>')||txt.includes('<span>'))el.innerHTML=txt;else el.textContent=txt;}});
+  document.getElementById('email').placeholder=lang==='ar'?'ahmed@example.com':'john@example.com';
+  document.getElementById('password').placeholder=lang==='ar'?'كلمة المرور':'Your password';
+}
+
+function togglePwd(){const i=document.getElementById('password');i.type=i.type==='password'?'text':'password';}
+
+function walletLogin(name){
+  alert(currentLang==='ar'
+    ?`جاري الاتصال بـ ${name}...\n\nقريباً في النسخة المباشرة.`
+    :`Connecting ${name}...\n\nComing soon in the live version.`);
+}
+
+async function handleLogin(e){
+  e.preventDefault();
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
+  const btn=document.getElementById('loginBtn');
+  const errBox=document.getElementById('errorBox');
+
+  errBox.style.display='none';
+  btn.textContent=currentLang==='ar'?'جاري تسجيل الدخول...':'Signing in...';
+  btn.disabled=true;
+
+  try {
+    const res=await fetch(`${API}/api/auth/login`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,password})
+    });
+    const data=await res.json();
+
+    if(!res.ok){
+      btn.disabled=false;
+      btn.setAttribute('data-ar','تسجيل الدخول');btn.setAttribute('data-en','Sign In');
+      setLang(currentLang);
+      errBox.style.display='block';
+
+      // If not verified, redirect to signup OTP step
+      if(data.needsVerification){
+        errBox.textContent=currentLang==='ar'
+          ?'حسابك غير مفعّل — تحقق من بريدك الإلكتروني'
+          :'Account not verified — check your email';
+        setTimeout(()=>{ window.location.href='signup.html'; },2000);
+      } else {
+        errBox.setAttribute('data-ar','البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+        errBox.setAttribute('data-en','Invalid email or password. Please try again.');
+        setLang(currentLang);
+      }
+      return;
+    }
+
+    // Save token and user info
+    localStorage.setItem('nahaar_token', data.token);
+    localStorage.setItem('nahaar_user', JSON.stringify(data.user));
+
+    // Redirect to trading terminal
+    window.location.href='trade.html';
+
+  } catch(err){
+    btn.disabled=false;
+    btn.setAttribute('data-ar','تسجيل الدخول');btn.setAttribute('data-en','Sign In');
+    setLang(currentLang);
+    errBox.textContent=currentLang==='ar'
+      ?'خطأ في الاتصال بالخادم. تحقق من اتصالك.'
+      :'Connection error. Please check your internet.';
+    errBox.style.display='block';
+  }
+}
+
+// If already logged in, go straight to trade
+if(localStorage.getItem('nahaar_token')){
+  window.location.href='trade.html';
+}
+
+setLang(currentLang);
+</script>
+</body>
+</html>
