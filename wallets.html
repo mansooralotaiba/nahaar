@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>نهار — تتبع المحافظ</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#07080A;--surface:#0D0F14;--surface2:#13161D;--border:rgba(212,175,55,0.08);--border2:rgba(212,175,55,0.18);--border3:rgba(212,175,55,0.32);--gold:#D4AF37;--gold2:#F0D060;--gold3:#A8882A;--gold-dim:rgba(212,175,55,0.10);--red:#E84545;--green:#2ECC8A;--text:#F2EDD7;--muted:#6B6550;--muted2:#9D9478;--font-ar:'Tajawal',sans-serif;--font-en:'Syne',sans-serif;--mono:'DM Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ar);min-height:100vh;}
+body.en{font-family:var(--font-en);}
+nav{background:var(--surface);border-bottom:1px solid var(--border2);padding:0 32px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.nav-logo{font-size:20px;font-weight:900;color:var(--gold);text-decoration:none;flex-shrink:0;}
+.nav-links{display:flex;gap:4px;}
+.nav-link{padding:5px 12px;border-radius:7px;font-size:13px;font-weight:600;color:var(--muted2);text-decoration:none;transition:all 0.2s;}
+.nav-link:hover{color:var(--text);background:var(--surface2);}
+.nav-link.active{color:var(--gold);}
+html[dir=rtl] .nav-right{margin-right:auto;}html[dir=ltr] .nav-right{margin-left:auto;}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nbtn{padding:6px 14px;border:1px solid var(--border2);border-radius:7px;background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.nbtn:hover{border-color:var(--gold);color:var(--gold);}
+.nbtn.gold{background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;border-color:transparent;font-weight:800;}
+.ltog{display:flex;align-items:center;border:1px solid var(--border2);border-radius:6px;overflow:hidden;}
+.lbtn{padding:4px 9px;font-size:11px;font-weight:700;font-family:var(--mono);cursor:pointer;color:var(--muted);transition:all 0.2s;}
+.lbtn.active{background:var(--gold-dim);color:var(--gold);}
+.ldv{width:1px;height:16px;background:var(--border2);}
+/* PAGE */
+.page{max-width:1200px;margin:0 auto;padding:32px 24px;}
+.page-hdr{margin-bottom:28px;}
+.page-hdr h1{font-size:28px;font-weight:800;margin-bottom:6px;}
+.page-hdr p{font-size:15px;color:var(--muted2);}
+/* SEARCH BAR */
+.search-bar{display:flex;gap:10px;margin-bottom:28px;}
+.search-wrap{flex:1;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:10px 16px;transition:border 0.2s;}
+.search-wrap:focus-within{border-color:var(--border3);}
+.search-wrap input{flex:1;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:14px;outline:none;}
+.search-wrap input::placeholder{color:var(--muted);}
+.search-icon{color:var(--muted);flex-shrink:0;}
+.search-btn{padding:10px 24px;background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.search-btn:hover{background:linear-gradient(135deg,var(--gold2),var(--gold));transform:translateY(-1px);}
+/* TOP WALLETS */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-title{font-size:18px;font-weight:700;}
+.section-sub{font-size:13px;color:var(--muted2);}
+.sort-tabs{display:flex;gap:4px;}
+.sort-tab{padding:5px 12px;border:1px solid var(--border2);border-radius:20px;font-size:12px;cursor:pointer;color:var(--muted2);transition:all 0.2s;}
+.sort-tab.active{background:var(--gold-dim);border-color:var(--border3);color:var(--gold);}
+/* LEADERBOARD TABLE */
+.lb-wrap{border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:36px;}
+.lb-hdr{display:grid;grid-template-columns:40px 1fr 140px 110px 110px 100px 110px;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);gap:8px;align-items:center;}
+.lb-hdr span{font-size:11px;font-family:var(--mono);letter-spacing:0.05em;color:var(--muted);text-transform:uppercase;white-space:nowrap;}
+.lb-row{display:grid;grid-template-columns:40px 1fr 140px 110px 110px 100px 110px;padding:12px 16px;border-bottom:1px solid var(--border);gap:8px;align-items:center;transition:background 0.15s;cursor:pointer;}
+.lb-row:last-child{border-bottom:none;}
+.lb-row:hover{background:var(--surface2);}
+.lb-rank{font-size:14px;font-weight:800;font-family:var(--mono);}
+.lb-rank.gold-rank{color:var(--gold);}
+.lb-rank.silver{color:#C0C0C0;}
+.lb-rank.bronze{color:#CD7F32;}
+.lb-wallet{display:flex;align-items:center;gap:10px;}
+.lb-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:1px solid var(--border2);}
+.lb-alias{font-size:13px;font-weight:700;}
+.lb-addr{font-size:10px;color:var(--muted2);font-family:var(--mono);}
+.lb-val{font-size:13px;font-family:var(--mono);}
+.lb-val.up{color:var(--green);font-weight:600;}
+.lb-val.dn{color:var(--red);font-weight:600;}
+.lb-val.gold-val{color:var(--gold);}
+.watch-btn{padding:5px 14px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;border:1px solid var(--border2);background:transparent;color:var(--muted2);white-space:nowrap;}
+.watch-btn:hover,.watch-btn.watching{border-color:var(--border3);background:var(--gold-dim);color:var(--gold);}
+/* WALLET DETAIL PANEL */
+.wallet-detail{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:36px;display:none;}
+.wallet-detail.open{display:block;}
+.wd-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;}
+.wd-avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:2px solid var(--border2);}
+.wd-name{font-size:20px;font-weight:800;}
+.wd-addr{font-size:12px;color:var(--muted2);font-family:var(--mono);margin-top:3px;}
+html[dir=rtl] .wd-close{margin-right:auto;}html[dir=ltr] .wd-close{margin-left:auto;}
+.wd-close{cursor:pointer;color:var(--muted);font-size:20px;padding:4px;}
+.wd-close:hover{color:var(--text);}
+.wd-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.wd-stat{background:var(--surface2);border-radius:10px;padding:12px 14px;text-align:center;}
+.wd-stat-val{font-size:18px;font-weight:800;font-family:var(--mono);}
+.wd-stat-val.up{color:var(--green);}
+.wd-stat-val.dn{color:var(--red);}
+.wd-stat-val.gold-val{color:var(--gold);}
+.wd-stat-lbl{font-size:11px;color:var(--muted2);margin-top:3px;}
+/* RECENT TRADES */
+.trades-title{font-size:15px;font-weight:700;margin-bottom:12px;}
+.trade-table{width:100%;border-collapse:collapse;}
+.trade-table th{font-size:11px;font-family:var(--mono);letter-spacing:0.05em;color:var(--muted);padding:6px 10px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+html[dir=rtl] .trade-table th,.trade-table td{text-align:right;}html[dir=ltr] .trade-table th,.trade-table td{text-align:left;}
+.trade-table td{font-size:12px;font-family:var(--mono);padding:9px 10px;border-bottom:1px solid var(--border);color:var(--muted2);}
+.trade-table tr:last-child td{border-bottom:none;}
+.trade-table tr:hover td{background:var(--surface2);}
+.side-badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;}
+.side-badge.long{background:rgba(46,204,138,0.12);color:var(--green);}
+.side-badge.short{background:rgba(232,69,69,0.12);color:var(--red);}
+.pnl-cell.up{color:var(--green);font-weight:600;}
+.pnl-cell.dn{color:var(--red);font-weight:600;}
+/* WATCHED SECTION */
+.watched-section{margin-bottom:36px;display:none;}
+.watched-section.has-items{display:block;}
+.watched-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:14px;}
+.ww-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all 0.2s;}
+.ww-card:hover{border-color:var(--border2);}
+.ww-name{font-size:13px;font-weight:700;margin-bottom:3px;}
+.ww-addr{font-size:10px;color:var(--muted2);font-family:var(--mono);}
+.ww-ret{font-size:16px;font-weight:800;font-family:var(--mono);margin-top:8px;}
+.ww-ret.up{color:var(--green);}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo" data-ar="نهار" data-en="Nahaar">نهار</a>
+  <div class="nav-links">
+    <a href="trade.html" class="nav-link" data-ar="التداول" data-en="Trade">التداول</a>
+    <a href="copytrade.html" class="nav-link" data-ar="نسخ التداول" data-en="Copy Trade">نسخ التداول</a>
+    <a href="wallets.html" class="nav-link active" data-ar="تتبع المحافظ" data-en="Wallets">تتبع المحافظ</a>
+  </div>
+  <div class="nav-right">
+    <div class="ltog"><div class="lbtn active" id="btnAr" onclick="setLang('ar')">AR</div><div class="ldv"></div><div class="lbtn" id="btnEn" onclick="setLang('en')">EN</div></div>
+    <a href="signup.html" class="nbtn gold" data-ar="ابدأ الآن" data-en="Get Started">ابدأ الآن</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-hdr">
+    <h1 data-ar="تتبع محافظ المتداولين" data-en="Trader Wallet Tracker">تتبع محافظ المتداولين</h1>
+    <p data-ar="تابع أفضل المحافظ على السلسلة. انظر ما يتداولونه لحظة بلحظة وتعلم من استراتيجياتهم." data-en="Follow the best on-chain wallets. See exactly what they're trading in real time and learn from their strategies.">تابع أفضل المحافظ على السلسلة. انظر ما يتداولونه لحظة بلحظة وتعلم من استراتيجياتهم.</p>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-bar">
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="addrSearch" data-placeholder-ar="أدخل عنوان محفظة أو اسم مستعار... (0x...)" data-placeholder-en="Enter wallet address or alias... (0x...)"/>
+    </div>
+    <button class="search-btn" onclick="searchWallet()" data-ar="بحث" data-en="Search">بحث</button>
+  </div>
+
+  <!-- WATCHED WALLETS -->
+  <div class="watched-section" id="watchedSection">
+    <div class="section-title" data-ar="محافظي المتابَعة" data-en="My Watched Wallets">محافظي المتابَعة</div>
+    <div class="watched-grid" id="watchedGrid"></div>
+  </div>
+
+  <!-- WALLET DETAIL PANEL -->
+  <div class="wallet-detail" id="walletDetail">
+    <div class="wd-header">
+      <div class="wd-avatar" id="wdAvatar">🦅</div>
+      <div>
+        <div class="wd-name" id="wdName">—</div>
+        <div class="wd-addr" id="wdAddr">0x...</div>
+      </div>
+      <span class="wd-close" onclick="closeDetail()">✕</span>
+    </div>
+    <div class="wd-stats" id="wdStats"></div>
+    <div class="trades-title" data-ar="آخر الصفقات" data-en="Recent Trades">آخر الصفقات</div>
+    <div style="overflow-x:auto;">
+      <table class="trade-table" id="wdTrades">
+        <thead><tr id="wdTHead"></tr></thead>
+        <tbody id="wdTBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="section-hdr">
+    <div>
+      <div class="section-title" data-ar="أفضل المحافظ — الأسبوع الماضي" data-en="Top Wallets — Last 7 Days">أفضل المحافظ — الأسبوع الماضي</div>
+      <div class="section-sub" data-ar="مرتبة حسب صافي الربح" data-en="Ranked by net PnL">مرتبة حسب صافي الربح</div>
+    </div>
+    <div class="sort-tabs">
+      <div class="sort-tab active" onclick="sortBy(this,'pnl')" data-ar="الربح" data-en="PnL">الربح</div>
+      <div class="sort-tab" onclick="sortBy(this,'ret')" data-ar="العائد%" data-en="Return%">العائد%</div>
+      <div class="sort-tab" onclick="sortBy(this,'vol')" data-ar="الحجم" data-en="Volume">الحجم</div>
+    </div>
+  </div>
+
+  <div class="lb-wrap">
+    <div class="lb-hdr">
+      <span>#</span>
+      <span data-ar="المحفظة" data-en="Wallet">المحفظة</span>
+      <span data-ar="صافي الربح/الخسارة" data-en="Net PnL">صافي الربح/الخسارة</span>
+      <span data-ar="العائد%" data-en="Return%">العائد%</span>
+      <span data-ar="نسبة الفوز" data-en="Win Rate">نسبة الفوز</span>
+      <span data-ar="الحجم" data-en="Volume">الحجم</span>
+      <span></span>
+    </div>
+    <div id="lbBody"></div>
+  </div>
+</div>
+
+<script>
+const LK='nahaar_lang';let lang=localStorage.getItem(LK)||'ar';
+let watchedIds=new Set(),openDetailId=null;
+const wallets=[
+  {id:1,alias:'الصقر الذهبي',aliasEn:'GoldenHawk',emoji:'🦅',color:'#D4AF37',addr:'0x3f8a...c2d1',pnl:'+$142,840',ret:'+284%',win:'76%',vol:'$4.2M',trades:312,streak:'18 wins',dd:'-7.4%'},
+  {id:2,alias:'BTC Wolf',aliasEn:'BTC Wolf',emoji:'🐺',color:'#C0C0C0',addr:'0x7b2e...f9a3',pnl:'+$98,220',ret:'+196%',win:'71%',vol:'$2.8M',trades:224,streak:'9 wins',dd:'-11.2%'},
+  {id:3,alias:'الأميرة',aliasEn:'La Princesa',emoji:'👑',color:'#CD7F32',addr:'0x1d4c...8e70',pnl:'+$76,100',ret:'+152%',win:'69%',vol:'$1.9M',trades:187,streak:'6 wins',dd:'-13.8%'},
+  {id:4,alias:'DeFi Monk',aliasEn:'DeFi Monk',emoji:'🧘',color:'#7F77DD',addr:'0xa5f1...3b2c',pnl:'+$54,390',ret:'+109%',win:'74%',vol:'$1.2M',trades:156,streak:'11 wins',dd:'-9.1%'},
+  {id:5,alias:'سيف البادية',aliasEn:'Desert Blade',emoji:'⚔️',color:'#E84545',addr:'0x6d9b...1a4e',pnl:'+$43,720',ret:'+87%',win:'66%',vol:'$890K',trades:203,streak:'4 wins',dd:'-16.4%'},
+  {id:6,alias:'Quiet Whale',aliasEn:'Quiet Whale',emoji:'🐋',color:'#12AAFF',addr:'0x2c3e...7f8d',pnl:'+$38,810',ret:'+78%',win:'72%',vol:'$2.1M',trades:89,streak:'7 wins',dd:'-8.7%'},
+  {id:7,alias:'نجمة الشمال',aliasEn:'North Star',emoji:'⭐',color:'#F0D060',addr:'0x8e7f...d2c1',pnl:'+$29,460',ret:'+59%',win:'68%',vol:'$640K',trades:142,streak:'5 wins',dd:'-10.3%'},
+  {id:8,alias:'Iron Hands',aliasEn:'Iron Hands',emoji:'🔩',color:'#B4B2A9',addr:'0x4a1d...9e3b',pnl:'+$22,180',ret:'+44%',win:'65%',vol:'$480K',trades:67,streak:'3 wins',dd:'-6.2%'},
+];
+const recentTrades=[
+  {sym:'BTC-USD',side:'long',size:'0.5',entry:'$82,400',close:'$84,800',pnl:'+$1,200',pct:'+2.9%',time:'2h ago',up:true},
+  {sym:'ETH-USD',side:'short',size:'2.0',entry:'$3,250',close:'$3,100',pnl:'+$300',pct:'+4.6%',time:'6h ago',up:true},
+  {sym:'SOL-USD',side:'long',size:'15',entry:'$138',close:'$144',pnl:'+$90',pct:'+4.3%',time:'1d ago',up:true},
+  {sym:'AVAX-USD',side:'short',size:'8',entry:'$36.2',close:'$34.1',pnl:'+$16.8',pct:'+5.8%',time:'2d ago',up:true},
+  {sym:'BTC-USD',side:'long',size:'0.2',entry:'$80,100',close:'$79,300',pnl:'-$160',pct:'-1.0%',time:'3d ago',up:false},
+];
+
+function setLang(l){
+  lang=l;localStorage.setItem(LK,l);
+  const h=document.documentElement;
+  if(l==='ar'){h.setAttribute('lang','ar');h.setAttribute('dir','rtl');document.body.classList.remove('en');document.getElementById('btnAr').classList.add('active');document.getElementById('btnEn').classList.remove('active');}
+  else{h.setAttribute('lang','en');h.setAttribute('dir','ltr');document.body.classList.add('en');document.getElementById('btnEn').classList.add('active');document.getElementById('btnAr').classList.remove('active');}
+  document.querySelectorAll('[data-ar]').forEach(e=>{const t=e.getAttribute('data-'+l);if(t)e.textContent=t;});
+  const si=document.getElementById('addrSearch');if(si)si.placeholder=si.getAttribute('data-placeholder-'+l)||'';
+  renderLB(wallets);renderWatched();
+  if(openDetailId!==null)openDetail(openDetailId);
+}
+
+function rankClass(i){return i===0?'gold-rank':i===1?'silver':i===2?'bronze':'';}
+
+function renderLB(list){
+  document.getElementById('lbBody').innerHTML=list.map((w,i)=>{
+    const name=lang==='ar'?w.alias:w.aliasEn;
+    const watching=watchedIds.has(w.id);
+    return `<div class="lb-row" onclick="openDetail(${w.id})">
+      <span class="lb-rank ${rankClass(i)}">${i+1}</span>
+      <div class="lb-wallet">
+        <div class="lb-avatar" style="background:${w.color}22;color:${w.color}">${w.emoji}</div>
+        <div>
+          <div class="lb-alias">${name}</div>
+          <div class="lb-addr">${w.addr}</div>
+        </div>
+      </div>
+      <span class="lb-val up">${w.pnl}</span>
+      <span class="lb-val up">${w.ret}</span>
+      <span class="lb-val">${w.win}</span>
+      <span class="lb-val gold-val">${w.vol}</span>
+      <button class="watch-btn ${watching?'watching':''}" onclick="event.stopPropagation();toggleWatch(${w.id},this)">
+        ${watching?(lang==='ar'?'متابَع ✓':'Watching ✓'):(lang==='ar'?'تابع':'Watch')}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function toggleWatch(id,btn){
+  if(watchedIds.has(id)){watchedIds.delete(id);btn.classList.remove('watching');btn.textContent=lang==='ar'?'تابع':'Watch';}
+  else{watchedIds.add(id);btn.classList.add('watching');btn.textContent=lang==='ar'?'متابَع ✓':'Watching ✓';}
+  renderWatched();
+}
+
+function renderWatched(){
+  const sec=document.getElementById('watchedSection');
+  if(watchedIds.size===0){sec.classList.remove('has-items');return;}
+  sec.classList.add('has-items');
+  document.getElementById('watchedGrid').innerHTML=[...watchedIds].map(id=>{
+    const w=wallets.find(x=>x.id===id);if(!w)return'';
+    const name=lang==='ar'?w.alias:w.aliasEn;
+    return `<div class="ww-card" onclick="openDetail(${w.id})">
+      <div class="ww-name">${w.emoji} ${name}</div>
+      <div class="ww-addr">${w.addr}</div>
+      <div class="ww-ret up">${w.ret}</div>
+    </div>`;
+  }).join('');
+}
+
+function openDetail(id){
+  openDetailId=id;
+  const w=wallets.find(x=>x.id===id);if(!w)return;
+  const name=lang==='ar'?w.alias:w.aliasEn;
+  const detail=document.getElementById('walletDetail');
+  detail.classList.add('open');
+  document.getElementById('wdAvatar').textContent=w.emoji;
+  document.getElementById('wdAvatar').style.background=w.color+'22';
+  document.getElementById('wdAvatar').style.color=w.color;
+  document.getElementById('wdName').textContent=name;
+  document.getElementById('wdAddr').textContent=w.addr;
+  const stats=[
+    {lbl:lang==='ar'?'صافي الربح/الخسارة':'Net PnL',val:w.pnl,cls:'up'},
+    {lbl:lang==='ar'?'العائد الإجمالي':'Total Return',val:w.ret,cls:'up'},
+    {lbl:lang==='ar'?'نسبة الفوز':'Win Rate',val:w.win,cls:''},
+    {lbl:lang==='ar'?'أفضل سلسلة':'Best Streak',val:w.streak,cls:'gold-val'},
+    {lbl:lang==='ar'?'الحد الأقصى للسحب':'Max Drawdown',val:w.dd,cls:'dn'},
+  ];
+  document.getElementById('wdStats').innerHTML=stats.map(s=>`<div class="wd-stat"><div class="wd-stat-val ${s.cls}">${s.val}</div><div class="wd-stat-lbl">${s.lbl}</div></div>`).join('');
+  const tH=lang==='ar'?['السوق','الاتجاه','الحجم','الدخول','الإغلاق','الربح/الخسارة','%','الوقت']:['Market','Side','Size','Entry','Close','PnL','%','Time'];
+  document.getElementById('wdTHead').innerHTML=tH.map(h=>`<th>${h}</th>`).join('');
+  document.getElementById('wdTBody').innerHTML=recentTrades.map(t=>`<tr>
+    <td style="color:var(--text);font-weight:600">${t.sym}</td>
+    <td><span class="side-badge ${t.side}">${t.side==='long'?(lang==='ar'?'شراء':'Long'):(lang==='ar'?'بيع':'Short')}</span></td>
+    <td>${t.size}</td><td>${t.entry}</td><td>${t.close}</td>
+    <td class="pnl-cell ${t.up?'up':'dn'}">${t.pnl}</td>
+    <td class="pnl-cell ${t.up?'up':'dn'}">${t.pct}</td>
+    <td>${t.time}</td>
+  </tr>`).join('');
+  detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeDetail(){document.getElementById('walletDetail').classList.remove('open');openDetailId=null;}
+
+function searchWallet(){
+  const q=document.getElementById('addrSearch').value.toLowerCase().trim();
+  if(!q)return;
+  const found=wallets.find(w=>w.addr.toLowerCase().includes(q)||w.alias.toLowerCase().includes(q)||w.aliasEn.toLowerCase().includes(q));
+  if(found)openDetail(found.id);
+  else alert(lang==='ar'?'لم يتم العثور على هذه المحفظة في قائمة المتداولين الأعلى أداءً.':'Wallet not found in the top performers list.');
+}
+
+function sortBy(el,type){
+  document.querySelectorAll('.sort-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  const sorted=[...wallets].sort((a,b)=>{
+    if(type==='pnl')return parseFloat(b.pnl.replace(/[^0-9.-]/g,''))-parseFloat(a.pnl.replace(/[^0-9.-]/g,''));
+    if(type==='ret')return parseFloat(b.ret)-parseFloat(a.ret);
+    if(type==='vol')return parseFloat(b.vol.replace(/[^0-9.]/g,''))-parseFloat(a.vol.replace(/[^0-9.]/g,''));
+    return 0;
+  });
+  renderLB(sorted);
+}
+
+document.getElementById('addrSearch').addEventListener('keydown',e=>{if(e.key==='Enter')searchWallet();});
+setLang(lang);
+</script>
+</body>
+</html>

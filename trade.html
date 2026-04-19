@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>نهار — Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.3/lightweight-charts.standalone.production.js"></script>
+<style>
+:root{--bg:#07080A;--surface:#0D0F14;--surface2:#13161D;--border:rgba(212,175,55,0.08);--border2:rgba(212,175,55,0.16);--border3:rgba(212,175,55,0.3);--gold:#D4AF37;--gold2:#F0D060;--gold3:#A8882A;--gold-dim:rgba(212,175,55,0.10);--red:#E84545;--green:#2ECC8A;--text:#F2EDD7;--muted:#6B6550;--muted2:#9D9478;--font-ar:'Tajawal',sans-serif;--font-en:'Syne',sans-serif;--mono:'DM Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ar);display:flex;flex-direction:column;}body.en{font-family:var(--font-en);}
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;}
+.tbar-logo{font-size:20px;font-weight:900;color:var(--gold);text-decoration:none;flex-shrink:0;}
+.tbar-div{width:1px;height:22px;background:var(--border2);flex-shrink:0;}
+.mpills{display:flex;gap:5px;overflow-x:auto;flex-shrink:0;}.mpills::-webkit-scrollbar{display:none;}
+.mpill{display:flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid var(--border2);border-radius:7px;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0;}
+.mpill:hover,.mpill.active{border-color:var(--border3);background:var(--gold-dim);}
+.mpill-sym{font-size:12px;font-weight:700;font-family:var(--mono);}
+.mpill-price{font-size:10px;font-family:var(--mono);color:var(--muted2);}
+.mpill-chg{font-size:10px;font-family:var(--mono);}
+.mpill-chg.up{color:var(--green);}.mpill-chg.dn{color:var(--red);}
+.tstats{display:flex;gap:16px;flex-shrink:0;}
+.tstat{display:flex;flex-direction:column;}
+.tstat-l{font-size:9px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;}
+.tstat-v{font-size:11px;font-family:var(--mono);font-weight:500;color:var(--muted2);}
+.tstat-v.up{color:var(--green);}.tstat-v.dn{color:var(--red);}
+html[dir=rtl] .tbar-right{margin-right:auto;}html[dir=ltr] .tbar-right{margin-left:auto;}
+.tbar-right{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.tbtn{padding:5px 11px;border:1px solid var(--border2);border-radius:7px;background:transparent;color:var(--text);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;white-space:nowrap;}
+.tbtn:hover{border-color:var(--gold);color:var(--gold);}
+.tbtn.gold{background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;border-color:transparent;font-weight:800;}
+.waddr{font-family:var(--mono);font-size:11px;color:var(--gold);padding:5px 10px;border:1px solid var(--border3);border-radius:6px;cursor:pointer;white-space:nowrap;}
+.ltog{display:flex;align-items:center;border:1px solid var(--border2);border-radius:6px;overflow:hidden;}
+.lbtn{padding:4px 8px;font-size:11px;font-weight:700;font-family:var(--mono);cursor:pointer;color:var(--muted);transition:all 0.2s;}
+.lbtn.active{background:var(--gold-dim);color:var(--gold);}
+.ldv{width:1px;height:16px;background:var(--border2);}
+.main{flex:1;display:grid;grid-template-columns:1fr 210px 285px;grid-template-rows:1fr 155px;overflow:hidden;}
+.panel{background:var(--surface);display:flex;flex-direction:column;overflow:hidden;}
+html[dir=rtl] .panel{border-right:1px solid var(--border);}
+html[dir=rtl] .panel:first-child{border-right:none;border-left:1px solid var(--border);}
+html[dir=ltr] .panel{border-left:1px solid var(--border);}
+html[dir=ltr] .panel:first-child{border-left:none;border-right:1px solid var(--border);}
+.phdr{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.ptitle{font-size:11px;font-family:var(--mono);letter-spacing:0.05em;color:var(--muted);text-transform:uppercase;}
+.ptab{padding:3px 9px;border-radius:5px;font-size:11px;cursor:pointer;color:var(--muted);transition:all 0.2s;white-space:nowrap;}
+.ptab:hover{color:var(--muted2);}.ptab.active{background:var(--surface2);color:var(--text);}
+html[dir=rtl] .ptf{margin-right:auto;}html[dir=ltr] .ptf{margin-left:auto;}
+.chart-wrap{flex:1;position:relative;min-height:0;}
+#cDiv{width:100%;height:100%;}
+.ohlc-overlay{position:absolute;top:10px;font-size:11px;font-family:var(--mono);color:var(--muted2);pointer-events:none;z-index:2;display:flex;gap:10px;}
+html[dir=rtl] .ohlc-overlay{right:14px;}html[dir=ltr] .ohlc-overlay{left:14px;}
+.ohlc-overlay span{color:var(--muted);}
+.ohlc-overlay b.up{color:var(--green);font-weight:400;}
+.ohlc-overlay b.dn{color:var(--red);font-weight:400;}
+.ob-content{flex:1;padding:6px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:1px;}
+.ob-hdr{display:grid;grid-template-columns:1fr 1fr 1fr;padding:0 0 5px;font-size:10px;font-family:var(--mono);color:var(--muted);}
+html[dir=rtl] .ob-hdr span:last-child{text-align:left;}html[dir=ltr] .ob-hdr span:last-child{text-align:right;}
+.ob-row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:2px 0;position:relative;cursor:pointer;border-radius:2px;}
+.ob-row:hover{background:var(--surface2);}
+.ob-depth{position:absolute;top:0;height:100%;opacity:0.09;border-radius:2px;}
+html[dir=rtl] .ob-depth{right:0;}html[dir=ltr] .ob-depth{left:0;}
+.ob-depth.ask{background:var(--red);}.ob-depth.bid{background:var(--green);}
+.ob-p{font-size:11px;font-family:var(--mono);font-weight:500;}
+.ob-p.ask{color:var(--red);}.ob-p.bid{color:var(--green);}
+.ob-sz{font-size:11px;font-family:var(--mono);color:var(--muted2);text-align:center;}
+.ob-tt{font-size:10px;font-family:var(--mono);color:var(--muted);}
+html[dir=rtl] .ob-tt{text-align:left;}html[dir=ltr] .ob-tt{text-align:right;}
+.ob-sp{text-align:center;padding:4px 0;font-size:10px;font-family:var(--mono);color:var(--muted);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:2px 0;flex-shrink:0;}
+.order-panel{overflow-y:auto;padding:11px;}
+.stog{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border2);border-radius:7px;overflow:hidden;margin-bottom:10px;}
+.sbtn{padding:8px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;color:var(--muted);white-space:nowrap;}
+.sbtn.buy.active{background:rgba(46,204,138,0.15);color:var(--green);}
+.sbtn.sell.active{background:rgba(232,69,69,0.12);color:var(--red);}
+.sbtn:hover:not(.active){background:var(--surface2);}
+.trow{display:flex;gap:3px;margin-bottom:10px;flex-wrap:wrap;}
+.ttab{padding:4px 9px;border-radius:5px;font-size:11px;cursor:pointer;color:var(--muted);border:1px solid transparent;transition:all 0.15s;font-family:var(--mono);}
+.ttab.active{border-color:var(--border2);color:var(--text);background:var(--surface2);}
+.fg{margin-bottom:9px;}
+.fg label{display:block;font-size:10px;font-family:var(--mono);letter-spacing:0.05em;color:var(--muted);margin-bottom:5px;text-transform:uppercase;}
+.frow{display:flex;border:1px solid var(--border2);border-radius:7px;overflow:hidden;background:var(--bg);}
+.frow input{flex:1;padding:8px 10px;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:0;}
+.funit{padding:0 9px;font-size:11px;color:var(--muted);background:var(--surface2);display:flex;align-items:center;white-space:nowrap;}
+html[dir=rtl] .funit{border-right:1px solid var(--border);}html[dir=ltr] .funit{border-left:1px solid var(--border);}
+.lrow{display:flex;align-items:center;gap:7px;margin-bottom:10px;}
+.llbl{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;white-space:nowrap;}
+.lval{font-size:12px;font-family:var(--mono);font-weight:500;color:var(--gold);min-width:26px;}
+input[type=range]{flex:1;accent-color:var(--gold);}
+.osum{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px;margin-bottom:9px;}
+.osr{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;}
+.osr span:first-child{color:var(--muted);font-family:var(--mono);}
+.osr span:last-child{color:var(--muted2);font-family:var(--mono);}
+.pbtn{width:100%;padding:10px;border:none;border-radius:7px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.2s;margin-bottom:6px;}
+.pbtn.buy{background:linear-gradient(135deg,#2ECC8A,#1a9a65);color:#fff;}
+.pbtn.sell{background:linear-gradient(135deg,#E84545,#a83030);color:#fff;}
+.pbtn:hover{opacity:0.88;transform:translateY(-1px);}
+.onote{font-size:10px;color:var(--muted);text-align:center;font-family:var(--mono);line-height:1.5;}
+.bbar{grid-column:1/-1;border-top:1px solid var(--border2);background:var(--surface);height:155px;display:flex;flex-direction:column;overflow:hidden;}
+.btabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.btab{padding:9px 13px;font-size:11px;font-family:var(--mono);color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;}
+.btab.active{color:var(--gold);border-color:var(--gold);}
+.btab:hover:not(.active){color:var(--muted2);}
+.bcont{flex:1;overflow-y:auto;padding:7px 13px;}
+.ptbl{width:100%;border-collapse:collapse;}
+.ptbl th{font-size:10px;font-family:var(--mono);letter-spacing:0.04em;color:var(--muted);padding:3px 7px;text-transform:uppercase;white-space:nowrap;}
+html[dir=rtl] .ptbl th,.ptbl td{text-align:right;}html[dir=ltr] .ptbl th,.ptbl td{text-align:left;}
+.ptbl td{font-size:11px;font-family:var(--mono);padding:5px 7px;border-top:1px solid var(--border);white-space:nowrap;}
+.pbadge{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;}
+.pbadge.long{background:rgba(46,204,138,0.12);color:var(--green);}
+.pbadge.short{background:rgba(232,69,69,0.12);color:var(--red);}
+.pnl.up{color:var(--green);}.pnl.dn{color:var(--red);}
+.cbtn{padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:transparent;color:var(--muted2);font-family:var(--mono);font-size:10px;cursor:pointer;}
+.cbtn:hover{border-color:var(--red);color:var(--red);}
+.nopos{font-size:12px;color:var(--muted);font-family:var(--mono);padding:18px 7px;}
+.toast{position:fixed;bottom:20px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 16px;font-size:13px;font-family:inherit;z-index:999;transform:translateY(80px);opacity:0;transition:all 0.3s;}
+html[dir=rtl] .toast{right:20px;}html[dir=ltr] .toast{left:20px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{border-color:rgba(212,175,55,0.4);color:var(--gold);}
+.toast.error{border-color:rgba(232,69,69,0.3);color:var(--red);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="tbar-logo" data-ar="نهار" data-en="Nahaar">نهار</a>
+  <div class="tbar-div"></div>
+  <div class="mpills" id="mPills"></div>
+  <div class="tstats" id="tStats"></div>
+  <div class="tbar-right">
+    <div class="ltog"><div class="lbtn active" id="btnAr" onclick="setLang('ar')">AR</div><div class="ldv"></div><div class="lbtn" id="btnEn" onclick="setLang('en')">EN</div></div>
+    <a href="copytrade.html" class="tbtn" data-ar="نسخ التداول" data-en="Copy Trade">نسخ التداول</a>
+    <a href="wallets.html" class="tbtn" data-ar="تتبع المحافظ" data-en="Wallets">تتبع المحافظ</a>
+    <a href="index.html" class="tbtn" data-ar="← الرئيسية" data-en="← Home">← الرئيسية</a>
+    <div class="waddr" onclick="connP()" id="wBtn" data-ar="ربط المحفظة" data-en="Connect Wallet">ربط المحفظة</div>
+    <button class="tbtn gold" onclick="connP()" data-ar="إيداع" data-en="Deposit">إيداع</button>
+  </div>
+</div>
+<div class="main">
+  <div class="panel">
+    <div class="phdr">
+      <div class="ptab active" data-ar="مخطط" data-en="Chart">مخطط</div>
+      <div class="ptab" data-ar="الصفقات" data-en="Trades">الصفقات</div>
+      <div class="ptf" style="display:flex;gap:3px;">
+        <div class="ptab" onclick="setTF(this,'5m')">5m</div>
+        <div class="ptab active" onclick="setTF(this,'1h')">1h</div>
+        <div class="ptab" onclick="setTF(this,'4h')">4h</div>
+        <div class="ptab" onclick="setTF(this,'1D')">1D</div>
+        <div class="ptab" onclick="setTF(this,'1W')">1W</div>
+      </div>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted2);" id="symLbl">BTC-USD</span>
+    </div>
+    <div class="chart-wrap">
+      <div class="ohlc-overlay" id="ohlcOvl"></div>
+      <div id="cDiv"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="phdr"><div class="ptitle" data-ar="دفتر الأوامر" data-en="Order Book">دفتر الأوامر</div></div>
+    <div class="ob-content">
+      <div class="ob-hdr"><span data-ar="السعر" data-en="Price">السعر</span><span style="text-align:center" data-ar="الحجم" data-en="Size">الحجم</span><span data-ar="المجموع" data-en="Total">المجموع</span></div>
+      <div id="askB"></div>
+      <div class="ob-sp" id="spInfo">—</div>
+      <div id="bidB"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="phdr"><div class="ptitle" data-ar="تنفيذ أمر" data-en="Place Order">تنفيذ أمر</div></div>
+    <div class="order-panel">
+      <div class="stog">
+        <div class="sbtn buy active" id="bBtn" onclick="setSide('buy')" data-ar="شراء / Long" data-en="Long / Buy">شراء / Long</div>
+        <div class="sbtn sell" id="sBtn" onclick="setSide('sell')" data-ar="بيع / Short" data-en="Short / Sell">بيع / Short</div>
+      </div>
+      <div class="trow">
+        <div class="ttab active" onclick="setType(this,'limit')" data-ar="محدود" data-en="Limit">محدود</div>
+        <div class="ttab" onclick="setType(this,'market')" data-ar="سوق" data-en="Market">سوق</div>
+        <div class="ttab" onclick="setType(this,'stop')" data-ar="وقف" data-en="Stop">وقف</div>
+        <div class="ttab" onclick="setType(this,'tpsl')">TP/SL</div>
+      </div>
+      <div class="fg" id="pFld">
+        <label data-ar="السعر" data-en="Price (USD)">السعر</label>
+        <div class="frow"><input type="number" id="pIn" oninput="calcO()"/><div class="funit">USD</div></div>
+      </div>
+      <div class="fg">
+        <label data-ar="الحجم" data-en="Size">الحجم</label>
+        <div class="frow"><input type="number" id="sIn" placeholder="0.001" oninput="calcO()" step="0.001"/><div class="funit" id="sUnit">BTC</div></div>
+      </div>
+      <div class="lrow">
+        <span class="llbl" data-ar="الرافعة" data-en="Leverage">الرافعة</span>
+        <span class="lval" id="lLbl">5×</span>
+        <input type="range" min="1" max="50" value="5" step="1" oninput="setLev(this.value)"/>
+      </div>
+      <div class="fg">
+        <label data-ar="الرصيد" data-en="Balance">الرصيد</label>
+        <div class="frow"><input type="text" value="0.00 USDC" readonly style="color:var(--muted2);cursor:default;"/><div class="funit" style="cursor:pointer;color:var(--gold);" onclick="connP()" data-ar="إيداع" data-en="Deposit">إيداع</div></div>
+      </div>
+      <div class="osum">
+        <div class="osr"><span data-ar="قيمة الأمر" data-en="Order value">قيمة الأمر</span><span id="sVal">—</span></div>
+        <div class="osr"><span data-ar="الهامش" data-en="Margin">الهامش</span><span id="sMgn">—</span></div>
+        <div class="osr"><span data-ar="سعر التصفية" data-en="Liq. price">سعر التصفية</span><span id="sLiq">—</span></div>
+        <div class="osr"><span data-ar="الرسوم" data-en="Fee">الرسوم</span><span id="sFee">—</span></div>
+      </div>
+      <button class="pbtn buy" id="plBtn" onclick="placeO()">شراء BTC-USD</button>
+      <div class="onote" data-ar="شبكة لامركزية · بلا حضانة · ~400ms" data-en="Decentralised · Non-custodial · ~400ms">شبكة لامركزية · بلا حضانة · ~400ms</div>
+    </div>
+  </div>
+  <div class="bbar">
+    <div class="btabs" id="bTabs">
+      <div class="btab active" onclick="showTab(this,'pos')" data-ar="الصفقات (2)" data-en="Positions (2)">الصفقات (2)</div>
+      <div class="btab" onclick="showTab(this,'ord')" data-ar="الأوامر (0)" data-en="Orders (0)">الأوامر (0)</div>
+      <div class="btab" onclick="showTab(this,'his')" data-ar="السجل" data-en="History">السجل</div>
+      <div class="btab" onclick="showTab(this,'fun')" data-ar="التمويل" data-en="Funding">التمويل</div>
+    </div>
+    <div class="bcont" id="bCont"></div>
+  </div>
+</div>
+<div class="toast" id="toastEl"></div>
+<script>
+const LK='nahaar_lang';let lang=localStorage.getItem(LK)||'ar';
+const T={ar:{sp:'الفارق',v:'الحجم 24س',oi:'الفائدة المفتوحة',f:'التمويل',mk:'سعر السوق',np:'ربط المحفظة لعرض الصفقات',no:'لا توجد أوامر',nh:'ربط المحفظة للسجل',nf:'ربط المحفظة للتمويل',pH:['السوق','الاتجاه','الحجم','الدخول','السعر','التصفية','ر/خ','إغلاق'],L:'شراء',S:'بيع',cl:'إغلاق',cm:'ربط MetaMask بنهار؟',tc:'تم ربط المحفظة',to:'تم إرسال الأمر',ts:'يرجى إدخال حجم صحيح',buy:'شراء',sell:'بيع'},
+en:{sp:'Spread',v:'24h Vol',oi:'Open Int.',f:'Funding',mk:'Mark Price',np:'Connect wallet to view positions',no:'No open orders',nh:'Connect wallet for history',nf:'Connect wallet for funding',pH:['Market','Side','Size','Entry','Mark','Liq.','PnL','Close'],L:'Long',S:'Short',cl:'Close',cm:'Connect MetaMask to Nahaar?',tc:'Wallet connected',to:'Order submitted',ts:'Enter a valid size',buy:'Long',sell:'Short'}};
+const MK={BTC:{price:84230,chg:2.34,vol:'$4.2B',oi:'$892M',funding:'+0.0042%',unit:'BTC'},ETH:{price:3180,chg:-1.12,vol:'$1.8B',oi:'$420M',funding:'-0.0021%',unit:'ETH'},SOL:{price:142.8,chg:5.61,vol:'$620M',oi:'$188M',funding:'+0.0071%',unit:'SOL'},AVAX:{price:34.2,chg:-0.88,vol:'$180M',oi:'$62M',funding:'-0.0015%',unit:'AVAX'},ARB:{price:0.824,chg:1.23,vol:'$95M',oi:'$28M',funding:'+0.0008%',unit:'ARB'}};
+let sym='BTC',side='buy',lev=5,wlt=false,chart=null,cs=null,ct='pos';
+function fp(p){if(p>=1000)return'$'+p.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});return'$'+p.toFixed(3);}
+function setLang(l){lang=l;localStorage.setItem(LK,l);const h=document.documentElement;if(l==='ar'){h.setAttribute('lang','ar');h.setAttribute('dir','rtl');document.body.classList.remove('en');document.getElementById('btnAr').classList.add('active');document.getElementById('btnEn').classList.remove('active');}else{h.setAttribute('lang','en');h.setAttribute('dir','ltr');document.body.classList.add('en');document.getElementById('btnEn').classList.add('active');document.getElementById('btnAr').classList.remove('active');}document.querySelectorAll('[data-ar]').forEach(e=>{const t=e.getAttribute('data-'+l);if(t)e.textContent=t;});renderPills();renderStats();updPlBtn();showTab(document.querySelector('.btab.active'),ct);}
+function renderPills(){document.getElementById('mPills').innerHTML=Object.keys(MK).map(s=>`<div class="mpill${s===sym?' active':''}" onclick="selM('${s}')"><span class="mpill-sym">${s}</span><span class="mpill-price">${fp(MK[s].price)}</span><span class="mpill-chg ${MK[s].chg>=0?'up':'dn'}">${MK[s].chg>=0?'+':''}${MK[s].chg}%</span></div>`).join('');}
+function renderStats(){const m=MK[sym],t=T[lang];document.getElementById('tStats').innerHTML=`<div class="tstat"><span class="tstat-l">${t.v}</span><span class="tstat-v">${m.vol}</span></div><div class="tstat"><span class="tstat-l">${t.oi}</span><span class="tstat-v">${m.oi}</span></div><div class="tstat"><span class="tstat-l">${t.f}</span><span class="tstat-v ${m.funding.startsWith('+')?'up':'dn'}">${m.funding}</span></div><div class="tstat"><span class="tstat-l">${t.mk}</span><span class="tstat-v">${fp(m.price)}</span></div>`;document.getElementById('symLbl').textContent=sym+'-USD';}
+function selM(s){sym=s;renderPills();renderStats();renderOB();buildChart();document.getElementById('sUnit').textContent=MK[s].unit;document.getElementById('pIn').placeholder=MK[s].price.toLocaleString();updPlBtn();calcO();}
+function tfS(tf){return{['5m']:300,['1h']:3600,['4h']:14400,['1D']:86400,['1W']:604800}[tf]||3600;}
+function genCand(base,n,tf){const d=[];let t=Math.floor(Date.now()/1000)-n*tfS(tf),c=base*0.92;for(let i=0;i<n;i++){const o=c,mv=(Math.random()-0.48)*base*0.018;c=Math.max(base*0.6,c+mv);const hi=Math.max(o,c)*(1+Math.random()*0.007),lo=Math.min(o,c)*(1-Math.random()*0.007),vol=Math.random()*500+50;d.push({time:t,open:+o.toFixed(2),high:+hi.toFixed(2),low:+lo.toFixed(2),close:+c.toFixed(2),value:+vol.toFixed(2),color:c>=o?'rgba(46,204,138,0.55)':'rgba(232,69,69,0.55)'});t+=tfS(tf);}return d;}
+function buildChart(){const el=document.getElementById('cDiv');if(chart){try{chart.remove();}catch(e){}chart=null;}chart=LightweightCharts.createChart(el,{width:el.clientWidth,height:el.clientHeight,layout:{background:{type:'solid',color:'#07080A'},textColor:'#6B6550'},grid:{vertLines:{color:'rgba(212,175,55,0.03)'},horzLines:{color:'rgba(212,175,55,0.03)'}},crosshair:{mode:LightweightCharts.CrosshairMode.Normal,vertLine:{color:'rgba(212,175,55,0.25)',width:1,style:3},horzLine:{color:'rgba(212,175,55,0.25)',width:1,style:3}},rightPriceScale:{borderColor:'rgba(212,175,55,0.08)',textColor:'#6B6550'},timeScale:{borderColor:'rgba(212,175,55,0.08)',textColor:'#6B6550',timeVisible:true}});
+const tf=document.querySelector('.ptf .ptab.active')?.textContent||'1h';
+const cands=genCand(MK[sym].price,120,tf);
+cs=chart.addCandlestickSeries({upColor:'#2ECC8A',downColor:'#E84545',borderUpColor:'#2ECC8A',borderDownColor:'#E84545',wickUpColor:'rgba(46,204,138,0.7)',wickDownColor:'rgba(232,69,69,0.7)'});
+cs.setData(cands);
+const vs=chart.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'vol',scaleMargins:{top:0.82,bottom:0}});
+vs.setData(cands.map(c=>({time:c.time,value:c.value,color:c.color})));
+chart.subscribeCrosshairMove(p=>{if(p.time&&cs){const d=p.seriesData?.get(cs);if(d){const up=d.close>=d.open;document.getElementById('ohlcOvl').innerHTML=`<span>O</span><b class="${up?'up':'dn'}">${fp(d.open)}</b><span>H</span><b class="${up?'up':'dn'}">${fp(d.high)}</b><span>L</span><b class="${up?'up':'dn'}">${fp(d.low)}</b><span>C</span><b class="${up?'up':'dn'}">${fp(d.close)}</b>`;}}});
+const ro=new ResizeObserver(()=>{if(chart)chart.applyOptions({width:el.clientWidth,height:el.clientHeight});});ro.observe(el);}
+function setTF(el,tf){document.querySelectorAll('.ptf .ptab').forEach(t=>t.classList.remove('active'));el.classList.add('active');buildChart();}
+function renderOB(){const bp=MK[sym].price,asks=[],bids=[];for(let i=0;i<10;i++){const off=(i+1)*(bp*0.0002+Math.random()*bp*0.0002);asks.unshift({p:bp+off,s:Math.random()*2+0.1,t:Math.random()*8+1});bids.push({p:bp-off,s:Math.random()*2+0.1,t:Math.random()*8+1});}const sp=asks[asks.length-1].p-bids[0].p,t=T[lang],mx=10;document.getElementById('spInfo').textContent=`${t.sp}: ${fp(sp)} · ${(sp/bp*100).toFixed(3)}%`;document.getElementById('askB').innerHTML=asks.map(r=>`<div class="ob-row"><div class="ob-depth ask" style="width:${Math.min(r.t/mx*100,100)}%"></div><span class="ob-p ask">${fp(r.p)}</span><span class="ob-sz">${r.s.toFixed(3)}</span><span class="ob-tt">${r.t.toFixed(2)}</span></div>`).join('');document.getElementById('bidB').innerHTML=bids.map(r=>`<div class="ob-row"><div class="ob-depth bid" style="width:${Math.min(r.t/mx*100,100)}%"></div><span class="ob-p bid">${fp(r.p)}</span><span class="ob-sz">${r.s.toFixed(3)}</span><span class="ob-tt">${r.t.toFixed(2)}</span></div>`).join('');}
+function setSide(s){side=s;document.getElementById('bBtn').className='sbtn buy'+(s==='buy'?' active':'');document.getElementById('sBtn').className='sbtn sell'+(s==='sell'?' active':'');document.getElementById('plBtn').className='pbtn '+s;updPlBtn();}
+function updPlBtn(){const t=T[lang];document.getElementById('plBtn').textContent=`${side==='buy'?t.buy:t.sell} ${sym}-USD`;}
+function setType(el,tp){document.querySelectorAll('.ttab').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('pFld').style.display=tp==='market'?'none':'block';}
+function setLev(v){lev=parseInt(v);document.getElementById('lLbl').textContent=v+'×';calcO();}
+function calcO(){const sz=parseFloat(document.getElementById('sIn').value)||0,p=MK[sym].price,val=sz*p,mg=val/lev,fee=val*0.0005,ld=mg/val||0,lp=side==='buy'?p*(1-ld):p*(1+ld);document.getElementById('sVal').textContent=val>0?'$'+val.toLocaleString('en-US',{maximumFractionDigits:2}):'—';document.getElementById('sMgn').textContent=mg>0?'$'+mg.toFixed(2):'—';document.getElementById('sLiq').textContent=val>0?fp(lp):'—';document.getElementById('sFee').textContent=fee>0?'$'+fee.toFixed(4):'—';}
+const dP=[{sym:'BTC-USD',side:'long',sz:'0.05 BTC',en:'$82,100',mk:'$84,230',liq:'$74,200',pnl:'+$106.50',up:true},{sym:'ETH-USD',side:'short',sz:'0.5 ETH',en:'$3,220',mk:'$3,180',liq:'$3,860',pnl:'+$20.00',up:true}];
+function showTab(el,tab){ct=tab;document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');const c=document.getElementById('bCont'),t=T[lang];if(tab==='pos'){if(!wlt){c.innerHTML=`<div class="nopos">${t.np}</div>`;return;}c.innerHTML=`<table class="ptbl"><thead><tr>${t.pH.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${dP.map(p=>`<tr><td>${p.sym}</td><td><span class="pbadge ${p.side}">${p.side==='long'?t.L:t.S}</span></td><td>${p.sz}</td><td>${p.en}</td><td>${p.mk}</td><td>${p.liq}</td><td class="pnl ${p.up?'up':'dn'}">${p.pnl}</td><td><button class="cbtn">${t.cl}</button></td></tr>`).join('')}</tbody></table>`;}else if(tab==='ord'){c.innerHTML=`<div class="nopos">${t.no}</div>`;}else if(tab==='his'){c.innerHTML=`<div class="nopos">${t.nh}</div>`;}else{c.innerHTML=`<div class="nopos">${t.nf}</div>`;}}
+function placeO(){if(!wlt){connP();return;}const sz=document.getElementById('sIn').value,t=T[lang];if(!sz||parseFloat(sz)<=0){toast(t.ts,'error');return;}toast(`${t.to}: ${side==='buy'?t.buy:t.sell} ${sz} ${sym}-USD`,'success');}
+function connP(){if(wlt)return;const t=T[lang];if(confirm(t.cm)){wlt=true;const b=document.getElementById('wBtn');b.textContent='0x3f...a2c1';b.style.color='var(--gold)';showTab(document.querySelector('.btab'),'pos');toast(t.tc,'success');}}
+function toast(msg,type='success'){const el=document.getElementById('toastEl');el.textContent=msg;el.className='toast '+type+' show';setTimeout(()=>el.classList.remove('show'),3000);}
+setLang(lang);buildChart();renderOB();showTab(document.querySelector('.btab'),'pos');
+setInterval(()=>{Object.keys(MK).forEach(s=>{MK[s].price*=(1+(Math.random()-0.501)*0.0003);});renderPills();renderStats();renderOB();if(cs){const m=MK[sym],now=Math.floor(Date.now()/1000),o=m.price*(1+(Math.random()-0.5)*0.002),c=m.price,hi=Math.max(o,c)*(1+Math.random()*0.003),lo=Math.min(o,c)*(1-Math.random()*0.003);try{cs.update({time:now,open:+o.toFixed(2),high:+hi.toFixed(2),low:+lo.toFixed(2),close:+c.toFixed(2)});}catch(e){}}},2500);
+</script>
+</body>
+</html>

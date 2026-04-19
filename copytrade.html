@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>نهار — نسخ التداول</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#07080A;--surface:#0D0F14;--surface2:#13161D;--border:rgba(212,175,55,0.08);--border2:rgba(212,175,55,0.18);--border3:rgba(212,175,55,0.32);--gold:#D4AF37;--gold2:#F0D060;--gold3:#A8882A;--gold-dim:rgba(212,175,55,0.10);--red:#E84545;--green:#2ECC8A;--text:#F2EDD7;--muted:#6B6550;--muted2:#9D9478;--font-ar:'Tajawal',sans-serif;--font-en:'Syne',sans-serif;--mono:'DM Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ar);min-height:100vh;}
+body.en{font-family:var(--font-en);}
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border2);padding:0 32px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.nav-logo{font-size:20px;font-weight:900;color:var(--gold);text-decoration:none;flex-shrink:0;}
+.nav-links{display:flex;gap:4px;}
+.nav-link{padding:5px 12px;border-radius:7px;font-size:13px;font-weight:600;color:var(--muted2);text-decoration:none;transition:all 0.2s;}
+.nav-link:hover{color:var(--text);background:var(--surface2);}
+.nav-link.active{color:var(--gold);}
+html[dir=rtl] .nav-right{margin-right:auto;}html[dir=ltr] .nav-right{margin-left:auto;}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nbtn{padding:6px 14px;border:1px solid var(--border2);border-radius:7px;background:transparent;color:var(--text);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.nbtn:hover{border-color:var(--gold);color:var(--gold);}
+.nbtn.gold{background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;border-color:transparent;font-weight:800;}
+.ltog{display:flex;align-items:center;border:1px solid var(--border2);border-radius:6px;overflow:hidden;}
+.lbtn{padding:4px 9px;font-size:11px;font-weight:700;font-family:var(--mono);cursor:pointer;color:var(--muted);transition:all 0.2s;}
+.lbtn.active{background:var(--gold-dim);color:var(--gold);}
+.ldv{width:1px;height:16px;background:var(--border2);}
+/* PAGE */
+.page{max-width:1200px;margin:0 auto;padding:32px 24px;}
+.page-hdr{margin-bottom:28px;}
+.page-hdr h1{font-size:28px;font-weight:800;margin-bottom:6px;}
+.page-hdr p{font-size:15px;color:var(--muted2);}
+/* FILTERS */
+.filters{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;align-items:center;}
+.filter-btn{padding:6px 16px;border:1px solid var(--border2);border-radius:20px;background:transparent;color:var(--muted2);font-family:inherit;font-size:13px;cursor:pointer;transition:all 0.2s;}
+.filter-btn:hover{border-color:var(--gold);color:var(--gold);}
+.filter-btn.active{background:var(--gold-dim);border-color:var(--border3);color:var(--gold);}
+html[dir=rtl] .filter-search{margin-right:auto;}html[dir=ltr] .filter-search{margin-left:auto;}
+.filter-search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:6px 14px;}
+.filter-search input{background:transparent;border:none;color:var(--text);font-family:inherit;font-size:13px;outline:none;width:200px;}
+.filter-search input::placeholder{color:var(--muted);}
+/* TRADER CARDS */
+.traders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.trader-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all 0.2s;position:relative;}
+.trader-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.trader-card.copying{border-color:var(--border3);}
+.copying-badge{position:absolute;top:12px;font-size:10px;font-weight:700;font-family:var(--mono);background:var(--gold-dim);border:1px solid var(--border3);color:var(--gold);padding:3px 10px;border-radius:20px;}
+html[dir=rtl] .copying-badge{left:12px;}html[dir=ltr] .copying-badge{right:12px;}
+.tc-header{padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.tc-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0;border:2px solid var(--border2);}
+.tc-name{font-size:15px;font-weight:700;}
+.tc-handle{font-size:11px;color:var(--muted2);font-family:var(--mono);}
+html[dir=rtl] .tc-followers{margin-right:auto;}html[dir=ltr] .tc-followers{margin-left:auto;}
+.tc-followers{text-align:center;}
+.tc-fnum{font-size:16px;font-weight:700;color:var(--gold);}
+.tc-flbl{font-size:10px;color:var(--muted2);font-family:var(--mono);}
+/* MINI CHART */
+.tc-chart{padding:12px 16px 0;height:70px;position:relative;}
+.tc-chart svg{width:100%;height:100%;}
+/* STATS */
+.tc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.tc-stat{padding:10px 12px;text-align:center;border-left:1px solid var(--border);}
+html[dir=ltr] .tc-stat{border-left:none;border-right:1px solid var(--border);}
+.tc-stat:last-child{border:none;}
+.tc-stat-val{font-size:14px;font-weight:700;font-family:var(--mono);}
+.tc-stat-val.up{color:var(--green);}
+.tc-stat-val.dn{color:var(--red);}
+.tc-stat-lbl{font-size:10px;color:var(--muted2);margin-top:2px;}
+/* MARKETS TRADED */
+.tc-markets{padding:10px 16px;display:flex;gap:6px;flex-wrap:wrap;}
+.mktag{padding:2px 8px;border-radius:4px;font-size:11px;font-family:var(--mono);background:var(--surface2);color:var(--muted2);border:1px solid var(--border);}
+/* ACTION */
+.tc-action{padding:12px 16px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;}
+.tc-risk{font-size:11px;color:var(--muted2);}
+.risk-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:5px;}
+html[dir=ltr] .risk-dot{margin-left:0;margin-right:5px;}
+.risk-dot.low{background:#2ECC8A;}
+.risk-dot.med{background:#D4AF37;}
+.risk-dot.high{background:#E84545;}
+.copy-btn{padding:8px 20px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;border:none;}
+.copy-btn.start{background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;}
+.copy-btn.start:hover{background:linear-gradient(135deg,var(--gold2),var(--gold));transform:translateY(-1px);}
+.copy-btn.stop{background:rgba(232,69,69,0.12);color:var(--red);border:1px solid rgba(232,69,69,0.3);}
+.copy-btn.stop:hover{background:rgba(232,69,69,0.2);}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;width:400px;max-width:90vw;}
+.modal h2{font-size:20px;font-weight:800;margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--muted2);margin-bottom:20px;}
+.modal-stat{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);}
+.modal-stat span:first-child{color:var(--muted2);}
+.modal-stat span:last-child{font-weight:600;font-family:var(--mono);}
+.modal-stat span:last-child.up{color:var(--green);}
+.modal-input-lbl{font-size:11px;font-family:var(--mono);letter-spacing:0.05em;color:var(--muted2);text-transform:uppercase;margin-top:16px;margin-bottom:6px;display:block;}
+.modal-input{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:inherit;font-size:14px;outline:none;}
+.modal-input:focus{border-color:var(--gold);}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;}
+.mbtn{padding:11px;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;border:none;}
+.mbtn.confirm{background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;}
+.mbtn.cancel{background:var(--surface2);color:var(--muted2);border:1px solid var(--border2);}
+.mbtn.confirm:hover{background:linear-gradient(135deg,var(--gold2),var(--gold));}
+/* MY COPIES SECTION */
+.section-title{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.my-copies{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:36px;}
+.mc-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;}
+.mc-name{font-size:14px;font-weight:700;}
+.mc-detail{font-size:11px;color:var(--muted2);font-family:var(--mono);margin-top:3px;}
+.mc-pnl{font-size:18px;font-weight:800;font-family:var(--mono);}
+.mc-pnl.up{color:var(--green);}
+.mc-pnl.dn{color:var(--red);}
+.mc-pnl-lbl{font-size:10px;color:var(--muted2);text-align:center;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo" data-ar="نهار" data-en="Nahaar">نهار</a>
+  <div class="nav-links">
+    <a href="trade.html" class="nav-link" data-ar="التداول" data-en="Trade">التداول</a>
+    <a href="copytrade.html" class="nav-link active" data-ar="نسخ التداول" data-en="Copy Trade">نسخ التداول</a>
+    <a href="wallets.html" class="nav-link" data-ar="تتبع المحافظ" data-en="Wallets">تتبع المحافظ</a>
+  </div>
+  <div class="nav-right">
+    <div class="ltog"><div class="lbtn active" id="btnAr" onclick="setLang('ar')">AR</div><div class="ldv"></div><div class="lbtn" id="btnEn" onclick="setLang('en')">EN</div></div>
+    <a href="signup.html" class="nbtn gold" data-ar="ابدأ الآن" data-en="Get Started">ابدأ الآن</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-hdr">
+    <h1 data-ar="نسخ التداول" data-en="Copy Trading">نسخ التداول</h1>
+    <p data-ar="انسخ صفقات أفضل المتداولين تلقائياً. اختر المتداول، حدد المبلغ، وكل شيء يتم تلقائياً." data-en="Automatically copy the trades of top performers. Choose a trader, set your amount, and everything runs on autopilot.">انسخ صفقات أفضل المتداولين تلقائياً. اختر المتداول، حدد المبلغ، وكل شيء يتم تلقائياً.</p>
+  </div>
+
+  <!-- MY COPIES -->
+  <div id="myCopiesSection" style="display:none;">
+    <div class="section-title" data-ar="تداولاتي المنسوخة" data-en="My Copy Trades">تداولاتي المنسوخة</div>
+    <div class="my-copies" id="myCopies"></div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterBy(this,'all')" data-ar="الكل" data-en="All">الكل</button>
+    <button class="filter-btn" onclick="filterBy(this,'top')" data-ar="الأعلى أرباحاً" data-en="Top Earners">الأعلى أرباحاً</button>
+    <button class="filter-btn" onclick="filterBy(this,'low')" data-ar="مخاطرة منخفضة" data-en="Low Risk">مخاطرة منخفضة</button>
+    <button class="filter-btn" onclick="filterBy(this,'btc')" data-ar="BTC متخصص" data-en="BTC Specialists">BTC متخصص</button>
+    <div class="filter-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchIn" oninput="doSearch()" data-placeholder-ar="ابحث عن متداول..." data-placeholder-en="Search traders..."/>
+    </div>
+  </div>
+
+  <!-- TRADER GRID -->
+  <div class="traders-grid" id="tradersGrid"></div>
+</div>
+
+<!-- COPY MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">—</h2>
+    <p class="modal-sub" data-ar="ستُنسخ صفقاته تلقائياً في حسابك بنسبة من رصيدك" data-en="Their trades will be automatically copied to your account proportionally">ستُنسخ صفقاته تلقائياً في حسابك بنسبة من رصيدك</p>
+    <div class="modal-stat"><span data-ar="عائد 90 يوم" data-en="90d return">عائد 90 يوم</span><span class="up" id="mRet">—</span></div>
+    <div class="modal-stat"><span data-ar="نسبة الفوز" data-en="Win rate">نسبة الفوز</span><span id="mWin">—</span></div>
+    <div class="modal-stat"><span data-ar="الحد الأقصى للسحب" data-en="Max drawdown">الحد الأقصى للسحب</span><span id="mDD">—</span></div>
+    <label class="modal-input-lbl" data-ar="مبلغ النسخ (USDC)" data-en="Copy amount (USDC)">مبلغ النسخ (USDC)</label>
+    <input class="modal-input" type="number" id="copyAmt" placeholder="100"/>
+    <div class="modal-actions">
+      <button class="mbtn cancel" onclick="closeModal()" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+      <button class="mbtn confirm" onclick="confirmCopy()" data-ar="ابدأ النسخ" data-en="Start copying">ابدأ النسخ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LK='nahaar_lang';let lang=localStorage.getItem(LK)||'ar';
+let modalTraderId=null,copyingIds=new Set();
+const colors=['#D4AF37','#2ECC8A','#7F77DD','#E84545','#12AAFF','#F7931A','#9945FF'];
+const traders=[
+  {id:1,name:'محمد العسكري',nameEn:'Mohammed Al-Askari',handle:'@m_trader',emoji:'🦅',color:'#D4AF37',followers:4821,ret90:'+142%',win:'73%',dd:'-8.2%',risk:'low',markets:['BTC','ETH','SOL'],pnl30:'+$18,420',sparkDir:true},
+  {id:2,name:'ليلى الخليل',nameEn:'Layla Al-Khalil',handle:'@layla_perps',emoji:'⚡',color:'#2ECC8A',followers:2390,ret90:'+89%',win:'68%',dd:'-12.1%',risk:'low',markets:['BTC','ETH'],pnl30:'+$9,100',sparkDir:true},
+  {id:3,name:'DeFi Hawk',nameEn:'DeFi Hawk',handle:'@defihawk',emoji:'🔥',color:'#E84545',followers:8920,ret90:'+310%',win:'61%',dd:'-24.8%',risk:'high',markets:['BTC','SOL','AVAX','ARB'],pnl30:'+$42,800',sparkDir:true},
+  {id:4,name:'خالد المنصور',nameEn:'Khalid Al-Mansour',handle:'@k_scalper',emoji:'⚔️',color:'#7F77DD',followers:1204,ret90:'+56%',win:'71%',dd:'-6.4%',risk:'low',markets:['BTC','ETH'],pnl30:'+$5,240',sparkDir:true},
+  {id:5,name:'Crypto Queen',nameEn:'Crypto Queen',handle:'@cqueen',emoji:'👑',color:'#F0D060',followers:12840,ret90:'+198%',win:'65%',dd:'-18.5%',risk:'med',markets:['BTC','ETH','SOL','ARB'],pnl30:'+$28,600',sparkDir:true},
+  {id:6,name:'سالم البدوي',nameEn:'Salem Al-Badawi',handle:'@s_btc',emoji:'📈',color:'#12AAFF',followers:3670,ret90:'+77%',win:'69%',dd:'-9.8%',risk:'med',markets:['BTC'],pnl30:'+$8,900',sparkDir:false},
+];
+
+function setLang(l){
+  lang=l;localStorage.setItem(LK,l);
+  const h=document.documentElement;
+  if(l==='ar'){h.setAttribute('lang','ar');h.setAttribute('dir','rtl');document.body.classList.remove('en');document.getElementById('btnAr').classList.add('active');document.getElementById('btnEn').classList.remove('active');}
+  else{h.setAttribute('lang','en');h.setAttribute('dir','ltr');document.body.classList.add('en');document.getElementById('btnEn').classList.add('active');document.getElementById('btnAr').classList.remove('active');}
+  document.querySelectorAll('[data-ar]').forEach(e=>{const t=e.getAttribute('data-'+l);if(t)e.textContent=t;});
+  const si=document.getElementById('searchIn');if(si)si.placeholder=si.getAttribute('data-placeholder-'+l)||'';
+  renderTraders(traders);renderMyCopies();
+}
+
+function sparkPath(dir,w,h){
+  let pts=[],y=h*0.7;
+  for(let i=0;i<20;i++){y=Math.max(4,Math.min(h-4,y+(Math.random()-0.46)*8*(dir?1:1)));pts.push(`${i*(w/19)},${y}`);}
+  return pts.join(' ');
+}
+
+function riskLabel(r){return{low:lang==='ar'?'مخاطرة منخفضة':'Low risk',med:lang==='ar'?'مخاطرة متوسطة':'Med risk',high:lang==='ar'?'مخاطرة عالية':'High risk'}[r];}
+function riskClass(r){return{low:'low',med:'med',high:'high'}[r];}
+function followersLbl(){return lang==='ar'?'متابع':'followers';}
+function copyLbl(id){return copyingIds.has(id)?(lang==='ar'?'إيقاف النسخ':'Stop copying'):(lang==='ar'?'ابدأ النسخ':'Start copying');}
+
+function renderTraders(list){
+  const g=document.getElementById('tradersGrid');
+  g.innerHTML=list.map(t=>{
+    const copying=copyingIds.has(t.id);
+    const sp=sparkPath(t.sparkDir,280,60);
+    const col=t.sparkDir?'#2ECC8A':'#E84545';
+    const name=lang==='ar'?t.name:t.nameEn;
+    return `<div class="trader-card${copying?' copying':''}" id="tc${t.id}">
+      ${copying?`<div class="copying-badge">${lang==='ar'?'يُنسخ الآن ✓':'Copying ✓'}</div>`:''}
+      <div class="tc-header">
+        <div class="tc-avatar" style="background:${t.color}22;color:${t.color}">${t.emoji}</div>
+        <div>
+          <div class="tc-name">${name}</div>
+          <div class="tc-handle">${t.handle}</div>
+        </div>
+        <div class="tc-followers">
+          <div class="tc-fnum">${(t.followers/1000).toFixed(1)}k</div>
+          <div class="tc-flbl">${followersLbl()}</div>
+        </div>
+      </div>
+      <div class="tc-chart">
+        <svg viewBox="0 0 280 60" preserveAspectRatio="none">
+          <polyline points="${sp}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+          <polyline points="${sp} 280,60 0,60" fill="${col}" fill-opacity="0.07" stroke="none"/>
+        </svg>
+      </div>
+      <div class="tc-stats">
+        <div class="tc-stat"><div class="tc-stat-val up">${t.ret90}</div><div class="tc-stat-lbl">${lang==='ar'?'90 يوم':'90d'}</div></div>
+        <div class="tc-stat"><div class="tc-stat-val">${t.win}</div><div class="tc-stat-lbl">${lang==='ar'?'نسبة الفوز':'Win rate'}</div></div>
+        <div class="tc-stat"><div class="tc-stat-val dn">${t.dd}</div><div class="tc-stat-lbl">${lang==='ar'?'أقصى سحب':'Max DD'}</div></div>
+        <div class="tc-stat"><div class="tc-stat-val up">${t.pnl30}</div><div class="tc-stat-lbl">${lang==='ar'?'30 يوم':'30d PnL'}</div></div>
+      </div>
+      <div class="tc-markets">${t.markets.map(m=>`<span class="mktag">${m}</span>`).join('')}</div>
+      <div class="tc-action">
+        <div class="tc-risk"><span class="risk-dot ${riskClass(t.risk)}"></span>${riskLabel(t.risk)}</div>
+        <button class="copy-btn ${copying?'stop':'start'}" onclick="handleCopy(${t.id})">${copyLbl(t.id)}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMyCopies(){
+  if(copyingIds.size===0){document.getElementById('myCopiesSection').style.display='none';return;}
+  document.getElementById('myCopiesSection').style.display='block';
+  const pnls=['+$324','−$42','+$1,204','+$88','−$156','+$540'];
+  document.getElementById('myCopies').innerHTML=[...copyingIds].map((id,i)=>{
+    const t=traders.find(x=>x.id===id);if(!t)return'';
+    const name=lang==='ar'?t.name:t.nameEn;
+    const pnl=pnls[i%pnls.length];const up=pnl.startsWith('+');
+    return `<div class="mc-card">
+      <div>
+        <div class="mc-name">${name}</div>
+        <div class="mc-detail">${t.handle} · ${lang==='ar'?'100 USDC مخصص':'100 USDC allocated'}</div>
+      </div>
+      <div style="text-align:center">
+        <div class="mc-pnl ${up?'up':'dn'}">${pnl}</div>
+        <div class="mc-pnl-lbl">${lang==='ar'?'إجمالي الربح/الخسارة':'Total PnL'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function handleCopy(id){
+  if(copyingIds.has(id)){copyingIds.delete(id);renderTraders(traders);renderMyCopies();return;}
+  const t=traders.find(x=>x.id===id);
+  if(!t)return;
+  modalTraderId=id;
+  const name=lang==='ar'?t.name:t.nameEn;
+  document.getElementById('modalTitle').textContent=(lang==='ar'?'نسخ صفقات ':'Copy trades of ')+name;
+  document.getElementById('mRet').textContent=t.ret90;
+  document.getElementById('mWin').textContent=t.win;
+  document.getElementById('mDD').textContent=t.dd;
+  document.getElementById('copyAmt').value='100';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');modalTraderId=null;}
+function confirmCopy(){
+  if(!modalTraderId)return;
+  copyingIds.add(modalTraderId);closeModal();
+  renderTraders(traders);renderMyCopies();
+}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
+
+function filterBy(el,type){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  let list=traders;
+  if(type==='top')list=[...traders].sort((a,b)=>parseFloat(b.ret90)-parseFloat(a.ret90));
+  else if(type==='low')list=traders.filter(t=>t.risk==='low');
+  else if(type==='btc')list=traders.filter(t=>t.markets.includes('BTC')&&t.markets.length<=2);
+  renderTraders(list);
+}
+function doSearch(){
+  const q=document.getElementById('searchIn').value.toLowerCase();
+  const list=traders.filter(t=>t.name.toLowerCase().includes(q)||t.nameEn.toLowerCase().includes(q)||t.handle.includes(q));
+  renderTraders(list);
+}
+setLang(lang);
+</script>
+</body>
+</html>

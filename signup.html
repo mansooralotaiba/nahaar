@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>نهار — إنشاء حساب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#07080A;--surface:#0D0F14;--surface2:#13161D;--border:rgba(212,175,55,0.08);--border2:rgba(212,175,55,0.18);--border3:rgba(212,175,55,0.32);--gold:#D4AF37;--gold2:#F0D060;--gold3:#A8882A;--gold-dim:rgba(212,175,55,0.10);--red:#E84545;--green:#2ECC8A;--text:#F2EDD7;--muted:#6B6550;--muted2:#9D9478;--font-ar:'Tajawal',sans-serif;--font-en:'Syne',sans-serif;--mono:'DM Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ar);min-height:100vh;display:flex;align-items:stretch;}
+body.en{font-family:var(--font-en);}
+.left-panel{flex:1;background:var(--surface);padding:48px;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+html[dir=rtl] .left-panel{border-left:1px solid var(--border);}
+html[dir=ltr] .left-panel{border-right:1px solid var(--border);}
+.left-panel::before{content:'';position:absolute;top:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(212,175,55,0.06) 0%,transparent 70%);pointer-events:none;}
+html[dir=rtl] .left-panel::before{right:-100px;}html[dir=ltr] .left-panel::before{left:-100px;}
+.logo-row{display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:26px;font-weight:900;color:var(--gold);text-decoration:none;}
+.lang-toggle{display:flex;align-items:center;border:1px solid var(--border2);border-radius:8px;overflow:hidden;cursor:pointer;}
+.lang-btn{padding:5px 11px;font-size:12px;font-weight:700;font-family:var(--mono);transition:all 0.2s;color:var(--muted);}
+.lang-btn.active{background:var(--gold-dim);color:var(--gold);}
+.lang-dv{width:1px;height:18px;background:var(--border2);}
+.left-content{margin:auto 0;padding:36px 0;}
+.left-content h2{font-size:34px;font-weight:900;line-height:1.1;margin-bottom:10px;}
+.left-content h2 span{color:var(--gold);}
+.left-content p{color:var(--muted2);font-size:15px;line-height:1.8;margin-bottom:24px;}
+.benefit{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.bdot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+.btext{font-size:14px;color:var(--muted2);}
+.left-footer{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.right-panel{width:480px;padding:40px;display:flex;flex-direction:column;justify-content:center;overflow-y:auto;}
+
+/* STEPS */
+.steps{display:flex;align-items:center;margin-bottom:28px;}
+.step{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);white-space:nowrap;}
+.step-num{width:24px;height:24px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all 0.3s;font-family:var(--mono);}
+.step.active .step-num{background:var(--gold);border-color:var(--gold);color:#000;}
+.step.done .step-num{background:var(--green);border-color:var(--green);color:#fff;}
+.step.active{color:var(--text);}
+.step-line{flex:1;height:1px;background:var(--border2);margin:0 6px;transition:background 0.3s;}
+.step-line.done{background:var(--green);}
+
+/* SCREENS */
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* FORM */
+.form-hdr{margin-bottom:20px;}
+.form-hdr h1{font-size:22px;font-weight:800;margin-bottom:5px;}
+.form-hdr p{font-size:13px;color:var(--muted2);}
+.form-hdr p a{color:var(--gold);text-decoration:none;}
+.fg{margin-bottom:13px;}
+.fg label{display:block;font-size:11px;font-weight:600;letter-spacing:0.04em;color:var(--muted2);margin-bottom:6px;text-transform:uppercase;font-family:var(--mono);}
+.fi{width:100%;padding:12px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border 0.2s;}
+.fi:focus{border-color:var(--gold);}
+.fi::placeholder{color:var(--muted);}
+.fi-otp{font-size:30px;font-weight:700;letter-spacing:0.22em;text-align:center;padding:14px;color:var(--gold);font-family:var(--mono);}
+.iw{position:relative;}
+html[dir=rtl] .eye{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;cursor:pointer;}
+html[dir=ltr] .eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;cursor:pointer;}
+html[dir=rtl] .fi.we{padding-left:40px;}html[dir=ltr] .fi.we{padding-right:40px;}
+.sbar{height:3px;border-radius:2px;background:var(--border2);margin-top:6px;overflow:hidden;}
+.sf{height:100%;border-radius:2px;transition:all 0.3s;width:0%;}
+.cb-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:13px;}
+.cb-row input{width:16px;height:16px;accent-color:var(--gold);margin-top:3px;flex-shrink:0;}
+.cb-row label{font-size:12px;color:var(--muted2);line-height:1.6;}
+.cb-row label a{color:var(--gold);text-decoration:none;}
+.err{color:var(--red);font-size:11px;margin-top:4px;display:none;font-family:var(--mono);}
+
+/* BUTTONS */
+.btn-g{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:all 0.2s;}
+.btn-g:hover{background:linear-gradient(135deg,var(--gold2),var(--gold));transform:translateY(-1px);box-shadow:0 6px 18px rgba(212,175,55,0.2);}
+.btn-g:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.btn-o{width:100%;padding:11px;background:transparent;color:var(--muted2);border:1px solid var(--border2);border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;margin-top:9px;}
+.btn-o:hover{border-color:var(--gold);color:var(--gold);}
+
+/* DIVIDER */
+.div-or{text-align:center;font-size:11px;color:var(--muted);margin:14px 0;font-family:var(--mono);position:relative;}
+.div-or::before,.div-or::after{content:'';position:absolute;top:50%;width:43%;height:1px;background:var(--border);}
+html[dir=rtl] .div-or::before{right:0;}html[dir=rtl] .div-or::after{left:0;}
+html[dir=ltr] .div-or::before{left:0;}html[dir=ltr] .div-or::after{right:0;}
+
+/* WALLET OPTS */
+.w-opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.w-opt{padding:10px 6px;border:1px solid var(--border2);border-radius:8px;background:transparent;color:var(--text);font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.w-opt:hover{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);}
+.w-icon{font-size:18px;}
+.w-name{font-size:10px;color:var(--muted2);font-family:var(--mono);}
+
+/* OTP INFO */
+.otp-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px 16px;margin-bottom:14px;display:flex;align-items:flex-start;gap:12px;}
+.otp-ico{font-size:20px;flex-shrink:0;margin-top:2px;}
+.otp-em{font-family:var(--mono);font-size:13px;color:var(--gold);}
+.otp-sub{font-size:11px;color:var(--muted2);margin-top:3px;}
+.resend{font-size:12px;color:var(--gold);cursor:pointer;font-family:var(--mono);}
+
+/* SCREEN 3 - WALLET CREATED */
+.wc-wrap{text-align:center;padding:16px 0;}
+.wc-icon{width:68px;height:68px;border-radius:50%;background:var(--gold-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px;color:var(--gold);}
+.wc-tag{display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(46,204,138,0.12);color:var(--green);margin-bottom:12px;font-family:var(--mono);}
+.wc-addr{font-family:var(--mono);font-size:11px;color:var(--gold);word-break:break-all;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:10px 0;line-height:1.6;}
+.wc-note{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:18px;}
+
+/* SCREEN 4 - DEPOSIT */
+.dep-tabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border2);border-radius:10px;overflow:hidden;margin-bottom:16px;}
+.dep-tab{padding:10px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;color:var(--muted);}
+.dep-tab.active{background:var(--gold-dim);color:var(--gold);}
+.dep-tab:hover:not(.active){background:var(--surface2);}
+.onramp{border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:10px;}
+.onramp-h{padding:12px 14px;background:var(--surface2);display:flex;align-items:center;gap:10px;}
+.onramp-logo{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.onramp-nm{font-size:14px;font-weight:700;}
+.onramp-st{font-size:11px;color:var(--muted2);}
+.onramp-b{padding:12px 14px;}
+.or-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;}
+.or-row span:first-child{color:var(--muted2);}
+.or-row span:last-child{color:var(--text);font-family:var(--mono);}
+.or-btn{width:100%;padding:9px;background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;margin-top:8px;transition:all 0.2s;}
+.or-btn:hover{opacity:0.88;transform:translateY(-1px);}
+.crypto-dep{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.net-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-family:var(--mono);background:rgba(127,119,221,0.12);color:#AFA9EC;margin-bottom:8px;}
+.net-dot{width:5px;height:5px;border-radius:50%;background:#AFA9EC;}
+.dep-addr-lbl{font-size:11px;color:var(--muted2);font-family:var(--mono);margin-bottom:6px;}
+.dep-addr{font-family:var(--mono);font-size:11px;color:var(--gold);word-break:break-all;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-bottom:8px;line-height:1.6;}
+.copy-b{width:100%;padding:8px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--muted2);font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.2s;}
+.copy-b:hover{border-color:var(--gold);color:var(--gold);}
+.warn-box{background:rgba(212,175,55,0.06);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--muted2);line-height:1.7;margin-top:10px;}
+.warn-title{color:var(--gold);display:block;margin-bottom:3px;font-weight:700;}
+@media(max-width:900px){.left-panel{display:none;}.right-panel{width:100%;max-width:480px;margin:0 auto;padding:28px 20px;}}
+</style>
+</head>
+<body>
+
+<div class="left-panel">
+  <div class="logo-row">
+    <a href="index.html" class="logo" data-ar="نهار" data-en="Nahaar">نهار</a>
+    <div class="lang-toggle">
+      <div class="lang-btn active" id="btnAr" onclick="setLang('ar')">AR</div>
+      <div class="lang-dv"></div>
+      <div class="lang-btn" id="btnEn" onclick="setLang('en')">EN</div>
+    </div>
+  </div>
+  <div class="left-content">
+    <h2 data-ar="ابدأ في دقيقتين.<br/><span>بدون تعقيد.</span>" data-en="Trading in two minutes.<br/><span>No complexity.</span>">ابدأ في دقيقتين.<br/><span>بدون تعقيد.</span></h2>
+    <p data-ar="لا تحتاج محفظة. لا خبرة في بلوكشين. فقط بريدك الإلكتروني وأنت جاهز للتداول." data-en="No wallet. No blockchain knowledge. Just your email and you're ready to trade.">لا تحتاج محفظة. لا خبرة في بلوكشين. فقط بريدك الإلكتروني وأنت جاهز للتداول.</p>
+    <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="سجّل بالبريد الإلكتروني — محفظتك تُنشأ تلقائياً" data-en="Sign up by email — wallet created automatically">سجّل بالبريد الإلكتروني — محفظتك تُنشأ تلقائياً</div></div>
+    <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="أودع بالبطاقة البنكية بالدرهم أو الريال" data-en="Deposit by card in AED, SAR, or USD">أودع بالبطاقة البنكية بالدرهم أو الريال</div></div>
+    <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="بلا KYC — بلا أوراق — بلا انتظار" data-en="No KYC — no paperwork — no waiting">بلا KYC — بلا أوراق — بلا انتظار</div></div>
+    <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="رافعة مالية 50× على 140+ سوق" data-en="50× leverage on 140+ markets">رافعة مالية 50× على 140+ سوق</div></div>
+    <div class="benefit"><div class="bdot"></div><div class="btext" data-ar="صدّر محفظتك إلى MetaMask في أي وقت" data-en="Export your wallet to MetaMask anytime">صدّر محفظتك إلى MetaMask في أي وقت</div></div>
+  </div>
+  <div class="left-footer" data-ar="© 2025 نهار للتداول. جميع الحقوق محفوظة." data-en="© 2025 Nahaar Trading. All rights reserved.">© 2025 نهار للتداول. جميع الحقوق محفوظة.</div>
+</div>
+
+<div class="right-panel">
+  <!-- STEPS BAR -->
+  <div class="steps" id="stepsBar">
+    <div class="step active" id="s1"><div class="step-num">1</div><span data-ar="حساب" data-en="Account">حساب</span></div>
+    <div class="step-line" id="l1"></div>
+    <div class="step" id="s2"><div class="step-num">2</div><span data-ar="تحقق" data-en="Verify">تحقق</span></div>
+    <div class="step-line" id="l2"></div>
+    <div class="step" id="s3"><div class="step-num">3</div><span data-ar="محفظة" data-en="Wallet">محفظة</span></div>
+    <div class="step-line" id="l3"></div>
+    <div class="step" id="s4"><div class="step-num">4</div><span data-ar="إيداع" data-en="Deposit">إيداع</span></div>
+  </div>
+
+  <!-- SCREEN 1: SIGNUP FORM -->
+  <div class="screen active" id="sc1">
+    <div class="form-hdr">
+      <h1 data-ar="إنشاء حساب جديد" data-en="Create your account">إنشاء حساب جديد</h1>
+      <p><span data-ar="لديك حساب؟ " data-en="Have an account? ">لديك حساب؟ </span><a href="login.html" data-ar="تسجيل الدخول" data-en="Sign in">تسجيل الدخول</a></p>
+    </div>
+    <div class="fg">
+      <label data-ar="البريد الإلكتروني" data-en="Email address">البريد الإلكتروني</label>
+      <input class="fi" type="email" id="emailIn" required/>
+      <div class="err" id="emailErr" data-ar="يرجى إدخال بريد إلكتروني صحيح" data-en="Please enter a valid email">يرجى إدخال بريد إلكتروني صحيح</div>
+    </div>
+    <div class="fg">
+      <label data-ar="كلمة المرور" data-en="Password">كلمة المرور</label>
+      <div class="iw">
+        <input class="fi we" type="password" id="pwdIn" required oninput="chkStr(this.value)"/>
+        <span class="eye" onclick="togPwd('pwdIn')">👁</span>
+      </div>
+      <div class="sbar"><div class="sf" id="sf"></div></div>
+      <div class="err" id="pwdErr" data-ar="8 أحرف على الأقل" data-en="Minimum 8 characters">8 أحرف على الأقل</div>
+    </div>
+    <div class="fg">
+      <label data-ar="تأكيد كلمة المرور" data-en="Confirm password">تأكيد كلمة المرور</label>
+      <div class="iw">
+        <input class="fi we" type="password" id="cpwdIn" required/>
+        <span class="eye" onclick="togPwd('cpwdIn')">👁</span>
+      </div>
+      <div class="err" id="cpwdErr" data-ar="كلمتا المرور غير متطابقتين" data-en="Passwords do not match">كلمتا المرور غير متطابقتين</div>
+    </div>
+    <div class="cb-row">
+      <input type="checkbox" id="terms"/>
+      <label for="terms"><span data-ar="أوافق على " data-en="I agree to the ">أوافق على </span><a href="#" data-ar="شروط الاستخدام" data-en="Terms of Use">شروط الاستخدام</a><span data-ar=" و" data-en=" and "> و</span><a href="#" data-ar="سياسة الخصوصية" data-en="Privacy Policy">سياسة الخصوصية</a></label>
+    </div>
+    <button class="btn-g" onclick="doStep1()" data-ar="متابعة ←" data-en="Continue →">متابعة ←</button>
+    <div class="div-or" data-ar="أو ادخل بمحفظتك الحالية" data-en="or connect your existing wallet">أو ادخل بمحفظتك الحالية</div>
+    <div class="w-opts">
+      <button class="w-opt" onclick="wConn('MetaMask')"><span class="w-icon">🦊</span><span class="w-name">MetaMask</span></button>
+      <button class="w-opt" onclick="wConn('WalletConnect')"><span class="w-icon">🔵</span><span class="w-name">WalletConnect</span></button>
+      <button class="w-opt" onclick="wConn('Coinbase')"><span class="w-icon">🔷</span><span class="w-name">Coinbase</span></button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: OTP -->
+  <div class="screen" id="sc2">
+    <div class="form-hdr">
+      <h1 data-ar="تحقق من بريدك" data-en="Check your email">تحقق من بريدك</h1>
+      <p data-ar="أرسلنا رمز تحقق مكون من 6 أرقام" data-en="We sent a 6-digit verification code">أرسلنا رمز تحقق مكون من 6 أرقام</p>
+    </div>
+    <div class="otp-box">
+      <span class="otp-ico">✉️</span>
+      <div>
+        <div class="otp-em" id="otpEM">—</div>
+        <div class="otp-sub" data-ar="تحقق من صندوق الوارد أو البريد غير المرغوب فيه" data-en="Check your inbox or spam folder">تحقق من صندوق الوارد أو البريد غير المرغوب فيه</div>
+      </div>
+    </div>
+    <div class="fg">
+      <label data-ar="رمز التحقق" data-en="Verification code">رمز التحقق</label>
+      <input class="fi fi-otp" type="text" id="otpIn" maxlength="6" placeholder="——————" oninput="this.value=this.value.replace(/\D/g,'');if(this.value.length===6)doVerify()"/>
+      <div class="err" id="otpErr" data-ar="الرمز غير صحيح. حاول مرة أخرى." data-en="Incorrect code. Please try again.">الرمز غير صحيح. حاول مرة أخرى.</div>
+    </div>
+    <button class="btn-g" id="verBtn" onclick="doVerify()" data-ar="تحقق ←" data-en="Verify →">تحقق ←</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+      <span class="resend" onclick="goSc(1)" style="color:var(--muted2);font-size:12px;" data-ar="← تعديل البريد" data-en="← Edit email">← تعديل البريد</span>
+      <span class="resend" onclick="resend()" data-ar="إعادة إرسال الرمز" data-en="Resend code">إعادة إرسال الرمز</span>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: WALLET CREATED -->
+  <div class="screen" id="sc3">
+    <div class="wc-wrap">
+      <div class="wc-icon">✓</div>
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:6px;" data-ar="تم إنشاء حسابك!" data-en="Your account is ready!">تم إنشاء حسابك!</h2>
+      <p style="font-size:14px;color:var(--muted2);margin-bottom:12px;" data-ar="تم إنشاء محفظة بلوكشين خاصة بك تلقائياً" data-en="A blockchain wallet was automatically created for you">تم إنشاء محفظة بلوكشين خاصة بك تلقائياً</p>
+      <span class="wc-tag" data-ar="محفظة نشطة ✓" data-en="Wallet active ✓">محفظة نشطة ✓</span>
+      <div class="wc-addr">0x3f8aC4d2...b9A07F6c5D</div>
+      <p class="wc-note" data-ar="هذا عنوان محفظتك على البلوكشين. يمكنك لاحقاً تصديرها إلى MetaMask للتحكم الكامل بمفاتيحك الخاصة." data-en="This is your blockchain wallet address. You can export it to MetaMask later for full control over your private keys.">هذا عنوان محفظتك على البلوكشين. يمكنك لاحقاً تصديرها إلى MetaMask للتحكم الكامل بمفاتيحك الخاصة.</p>
+      <button class="btn-g" onclick="goSc(4)" data-ar="أودع الآن وابدأ التداول ←" data-en="Deposit now & start trading →">أودع الآن وابدأ التداول ←</button>
+      <button class="btn-o" onclick="location.href='trade.html'" data-ar="تخطّ — أودع لاحقاً" data-en="Skip — deposit later">تخطّ — أودع لاحقاً</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: DEPOSIT -->
+  <div class="screen" id="sc4">
+    <div class="form-hdr">
+      <h1 data-ar="أودع وابدأ التداول" data-en="Deposit to start trading">أودع وابدأ التداول</h1>
+      <p data-ar="اختر طريقة الإيداع المناسبة لك" data-en="Choose your preferred deposit method">اختر طريقة الإيداع المناسبة لك</p>
+    </div>
+    <div class="dep-tabs">
+      <div class="dep-tab active" id="tCard" onclick="showDep('card')" data-ar="بطاقة / تحويل بنكي" data-en="Card / Bank Transfer">بطاقة / تحويل بنكي</div>
+      <div class="dep-tab" id="tCrypto" onclick="showDep('crypto')" data-ar="إيداع USDC مباشر" data-en="Direct USDC Deposit">إيداع USDC مباشر</div>
+    </div>
+
+    <!-- FIAT ON-RAMP -->
+    <div id="mCard">
+      <p style="font-size:12px;color:var(--muted2);margin-bottom:12px;" data-ar="اشترِ USDC بعملتك المحلية مباشرة عبر مزودي دفع آمنين" data-en="Buy USDC in your local currency via trusted payment providers">اشترِ USDC بعملتك المحلية مباشرة عبر مزودي دفع آمنين</p>
+
+      <div class="onramp">
+        <div class="onramp-h">
+          <div class="onramp-logo" style="background:rgba(127,119,221,0.15);">🌙</div>
+          <div><div class="onramp-nm">MoonPay</div><div class="onramp-st" data-ar="بطاقة · Apple Pay · تحويل بنكي" data-en="Card · Apple Pay · Bank transfer">بطاقة · Apple Pay · تحويل بنكي</div></div>
+        </div>
+        <div class="onramp-b">
+          <div class="or-row"><span data-ar="الرسوم" data-en="Fee">الرسوم</span><span>~1.5%</span></div>
+          <div class="or-row"><span data-ar="العملات" data-en="Currencies">العملات</span><span>AED · SAR · USD · EUR</span></div>
+          <div class="or-row"><span data-ar="الحد الأدنى" data-en="Minimum">الحد الأدنى</span><span>$20 USDC</span></div>
+          <button class="or-btn" onclick="onramp('MoonPay')" data-ar="شراء USDC عبر MoonPay" data-en="Buy USDC via MoonPay">شراء USDC عبر MoonPay</button>
+        </div>
+      </div>
+
+      <div class="onramp">
+        <div class="onramp-h">
+          <div class="onramp-logo" style="background:rgba(29,158,117,0.15);">⚡</div>
+          <div><div class="onramp-nm">Transak</div><div class="onramp-st" data-ar="بطاقة · P2P · أكثر من 100 دولة" data-en="Card · P2P · 100+ countries">بطاقة · P2P · أكثر من 100 دولة</div></div>
+        </div>
+        <div class="onramp-b">
+          <div class="or-row"><span data-ar="الرسوم" data-en="Fee">الرسوم</span><span>~0.99%</span></div>
+          <div class="or-row"><span data-ar="العملات" data-en="Currencies">العملات</span><span>AED · SAR · KWD · EGP</span></div>
+          <div class="or-row"><span data-ar="الحد الأدنى" data-en="Minimum">الحد الأدنى</span><span>$10 USDC</span></div>
+          <button class="or-btn" onclick="onramp('Transak')" data-ar="شراء USDC عبر Transak" data-en="Buy USDC via Transak">شراء USDC عبر Transak</button>
+        </div>
+      </div>
+
+      <div class="onramp">
+        <div class="onramp-h">
+          <div class="onramp-logo" style="background:rgba(212,175,55,0.15);">🔮</div>
+          <div><div class="onramp-nm">Alchemy Pay</div><div class="onramp-st" data-ar="Visa · Mastercard · تحويل محلي" data-en="Visa · Mastercard · Local bank">Visa · Mastercard · تحويل محلي</div></div>
+        </div>
+        <div class="onramp-b">
+          <div class="or-row"><span data-ar="الرسوم" data-en="Fee">الرسوم</span><span>~2%</span></div>
+          <div class="or-row"><span data-ar="العملات" data-en="Currencies">العملات</span><span>AED · SAR · USD</span></div>
+          <div class="or-row"><span data-ar="الحد الأدنى" data-en="Minimum">الحد الأدنى</span><span>$15 USDC</span></div>
+          <button class="or-btn" onclick="onramp('Alchemy Pay')" data-ar="شراء USDC عبر Alchemy Pay" data-en="Buy USDC via Alchemy Pay">شراء USDC عبر Alchemy Pay</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRYPTO DIRECT -->
+    <div id="mCrypto" style="display:none;">
+      <p style="font-size:12px;color:var(--muted2);margin-bottom:12px;" data-ar="أرسل USDC مباشرة من محفظتك أو من منصة تداول أخرى" data-en="Send USDC directly from your wallet or another exchange">أرسل USDC مباشرة من محفظتك أو من منصة تداول أخرى</p>
+      <div class="crypto-dep">
+        <div class="net-badge"><div class="net-dot"></div>Arbitrum One</div>
+        <div class="dep-addr-lbl" data-ar="عنوان إيداع USDC الخاص بك" data-en="Your USDC deposit address">عنوان إيداع USDC الخاص بك</div>
+        <div class="dep-addr">0x3f8aC4d2E1B9A07F6c5D4e2F7b9A0c3D8e1F4a2</div>
+        <button class="copy-b" id="cpBtn" onclick="cpAddr()" data-ar="نسخ العنوان" data-en="Copy address">نسخ العنوان</button>
+      </div>
+      <div class="warn-box">
+        <strong class="warn-title" data-ar="⚠ مهم جداً" data-en="⚠ Important">⚠ مهم جداً</strong>
+        <span data-ar="أرسل USDC فقط على شبكة Arbitrum. إرسال على شبكة مختلفة يؤدي إلى فقدان الأموال نهائياً." data-en="Send USDC only on the Arbitrum network. Using a different network will result in permanent loss of funds.">أرسل USDC فقط على شبكة Arbitrum. إرسال على شبكة مختلفة يؤدي إلى فقدان الأموال نهائياً.</span>
+      </div>
+    </div>
+
+    <button class="btn-o" style="margin-top:14px;" onclick="location.href='trade.html'" data-ar="تخطّ — أودع لاحقاً من لوحة التحكم" data-en="Skip — deposit later from dashboard">تخطّ — أودع لاحقاً من لوحة التحكم</button>
+  </div>
+
+</div>
+
+<script>
+const LANG_KEY='nahaar_lang';
+let lang=localStorage.getItem(LANG_KEY)||'ar';
+let userEmail='';
+
+function setLang(l){
+  lang=l;localStorage.setItem(LANG_KEY,l);
+  const html=document.documentElement;
+  if(l==='ar'){html.setAttribute('lang','ar');html.setAttribute('dir','rtl');document.body.classList.remove('en');document.getElementById('btnAr').classList.add('active');document.getElementById('btnEn').classList.remove('active');}
+  else{html.setAttribute('lang','en');html.setAttribute('dir','ltr');document.body.classList.add('en');document.getElementById('btnEn').classList.add('active');document.getElementById('btnAr').classList.remove('active');}
+  document.querySelectorAll('[data-ar]').forEach(el=>{const t=el.getAttribute('data-'+l);if(t){if(t.includes('<br/>')||t.includes('<span>'))el.innerHTML=t;else el.textContent=t;}});
+  setPlaceholders();
+}
+function setPlaceholders(){
+  const ar=lang==='ar';
+  const ei=document.getElementById('emailIn');
+  if(ei)ei.placeholder=ar?'ahmed@example.com':'john@example.com';
+  const pi=document.getElementById('pwdIn');
+  if(pi)pi.placeholder=ar?'8 أحرف على الأقل':'Min. 8 characters';
+  const ci=document.getElementById('cpwdIn');
+  if(ci)ci.placeholder=ar?'أعد كلمة المرور':'Repeat password';
+}
+function goSc(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sc'+n).classList.add('active');
+  [1,2,3,4].forEach(i=>{
+    const s=document.getElementById('s'+i);
+    s.classList.remove('active','done');
+    if(i<n)s.classList.add('done');
+    else if(i===n)s.classList.add('active');
+    if(i<4)document.getElementById('l'+i).classList.toggle('done',i<n);
+  });
+}
+function togPwd(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
+function chkStr(v){
+  const f=document.getElementById('sf');let s=0;
+  if(v.length>=8)s++;if(v.length>=12)s++;if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^a-zA-Z0-9]/.test(v))s++;
+  f.style.width=Math.min(100,s*20)+'%';
+  f.style.background=s<=1?'#E84545':s<=3?'#E8A045':'#2ECC8A';
+}
+function doStep1(){
+  const email=document.getElementById('emailIn').value;
+  const pwd=document.getElementById('pwdIn').value;
+  const cpwd=document.getElementById('cpwdIn').value;
+  const terms=document.getElementById('terms').checked;
+  document.querySelectorAll('.err').forEach(e=>e.style.display='none');
+  let ok=true;
+  if(!email.includes('@')){document.getElementById('emailErr').style.display='block';ok=false;}
+  if(pwd.length<8){document.getElementById('pwdErr').style.display='block';ok=false;}
+  if(pwd!==cpwd){document.getElementById('cpwdErr').style.display='block';ok=false;}
+  if(!terms){alert(lang==='ar'?'يرجى الموافقة على الشروط':'Please accept the terms');ok=false;}
+  if(!ok)return;
+  userEmail=email;
+  document.getElementById('otpEM').textContent=email;
+  goSc(2);
+}
+function doVerify(){
+  const code=document.getElementById('otpIn').value;
+  document.getElementById('otpErr').style.display='none';
+  if(code.length<6)return;
+  const btn=document.getElementById('verBtn');
+  btn.textContent=lang==='ar'?'جارٍ التحقق...':'Verifying...';
+  btn.disabled=true;
+  setTimeout(()=>{
+    btn.disabled=false;
+    // any 6-digit code works except 000000 (demo error case)
+    if(code==='000000'){document.getElementById('otpErr').style.display='block';setLang(lang);return;}
+    goSc(3);
+  },1200);
+}
+function resend(){
+  document.getElementById('otpIn').value='';
+  alert(lang==='ar'?'تم إرسال رمز جديد إلى '+userEmail:'New code sent to '+userEmail);
+}
+function showDep(m){
+  document.getElementById('mCard').style.display=m==='card'?'block':'none';
+  document.getElementById('mCrypto').style.display=m==='crypto'?'block':'none';
+  document.getElementById('tCard').classList.toggle('active',m==='card');
+  document.getElementById('tCrypto').classList.toggle('active',m==='crypto');
+}
+function onramp(name){
+  alert(lang==='ar'
+    ?`جاري فتح ${name}...\n\nفي النسخة المباشرة: ستُفتح نافذة دفع ${name} مباشرة داخل نهار. يشتري المستخدم USDC بعملته المحلية وتصل تلقائياً إلى محفظته خلال ثوانٍ.`
+    :`Opening ${name}...\n\nIn production: ${name}'s payment widget opens inline inside Nahaar. The user buys USDC in their local currency and it arrives automatically in their wallet within seconds.`);
+}
+function cpAddr(){
+  navigator.clipboard.writeText('0x3f8aC4d2E1B9A07F6c5D4e2F7b9A0c3D8e1F4a2').catch(()=>{});
+  const btn=document.getElementById('cpBtn');
+  const orig=btn.textContent;
+  btn.textContent=lang==='ar'?'تم النسخ ✓':'Copied ✓';
+  btn.style.color='var(--green)';btn.style.borderColor='var(--green)';
+  setTimeout(()=>{btn.textContent=orig;btn.style.color='';btn.style.borderColor='';},2000);
+}
+function wConn(name){
+  alert(lang==='ar'
+    ?`جاري الاتصال بـ ${name}...\n\nفي النسخة المباشرة: يُطلب توقيع رسالة للمصادقة دون الحاجة لكلمة مرور.`
+    :`Connecting ${name}...\n\nIn production: requests a wallet signature to authenticate. No password needed.`);
+}
+setLang(lang);
+</script>
+</body>
+</html>
