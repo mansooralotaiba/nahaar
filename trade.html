@@ -217,14 +217,111 @@ html[dir=rtl] .toast{right:20px;}html[dir=ltr] .toast{left:20px;}
 const LK='nahaar_lang';let lang=localStorage.getItem(LK)||'ar';
 const T={ar:{sp:'الفارق',v:'الحجم 24س',oi:'الفائدة المفتوحة',f:'التمويل',mk:'سعر السوق',np:'سجّل دخولك لعرض الصفقات المفتوحة',no:'لا توجد أوامر',nh:'سجّل دخولك لعرض السجل',nf:'سجّل دخولك لعرض التمويل',pH:['السوق','الاتجاه','الحجم','الدخول','السعر','التصفية','ر/خ','إغلاق'],L:'شراء',S:'بيع',cl:'إغلاق',to:'تم إرسال الأمر',ts:'يرجى إدخال حجم صحيح',buy:'شراء',sell:'بيع'},
 en:{sp:'Spread',v:'24h Vol',oi:'Open Int.',f:'Funding',mk:'Mark Price',np:'Sign in to view open positions',no:'No open orders',nh:'Sign in for history',nf:'Sign in for funding',pH:['Market','Side','Size','Entry','Mark','Liq.','PnL','Close'],L:'Long',S:'Short',cl:'Close',to:'Order submitted',ts:'Enter a valid size',buy:'Long',sell:'Short'}};
-const MK={BTC:{price:84230,chg:2.34,vol:'$4.2B',oi:'$892M',funding:'+0.0042%',unit:'BTC'},ETH:{price:3180,chg:-1.12,vol:'$1.8B',oi:'$420M',funding:'-0.0021%',unit:'ETH'},SOL:{price:142.8,chg:5.61,vol:'$620M',oi:'$188M',funding:'+0.0071%',unit:'SOL'},AVAX:{price:34.2,chg:-0.88,vol:'$180M',oi:'$62M',funding:'-0.0015%',unit:'AVAX'},ARB:{price:0.824,chg:1.23,vol:'$95M',oi:'$28M',funding:'+0.0008%',unit:'ARB'}};
+// Market data — dynamically loaded from Hyperliquid
+let MK={
+  BTC:{price:84230,chg:0,vol:'—',oi:'—',funding:'—',unit:'BTC'},
+  ETH:{price:3180,chg:0,vol:'—',oi:'—',funding:'—',unit:'ETH'},
+  SOL:{price:142.8,chg:0,vol:'—',oi:'—',funding:'—',unit:'SOL'},
+};
+let allMarkets=[]; // full list loaded from Hyperliquid
 let sym='BTC',side='buy',lev=5,wlt=false,chart=null,cs=null,ct='pos';
 const API='https://nahaar-backend-nahaar.up.railway.app';
+const HL_API='https://api.hyperliquid.xyz/info';
+
+// Fetch all markets + prices from Hyperliquid directly
+async function loadAllMarkets(){
+  try {
+    const res=await fetch(HL_API,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:'metaAndAssetCtxs'})
+    });
+    const data=await res.json();
+    const universe=data[0]?.universe||[];
+    const ctx=data[1]||[];
+
+    // Build full market map
+    MK={};
+    allMarkets=[];
+    universe.forEach((asset,i)=>{
+      const c=ctx[i]||{};
+      const name=asset.name;
+      const price=parseFloat(c.markPx||c.midPx||0);
+      const prevPrice=parseFloat(c.prevDayPx||price);
+      const chg=prevPrice>0?((price-prevPrice)/prevPrice*100):0;
+      const vol=parseFloat(c.dayNtlVlm||0);
+      const volStr=vol>=1e9?'$'+(vol/1e9).toFixed(1)+'B':vol>=1e6?'$'+(vol/1e6).toFixed(0)+'M':vol>=1e3?'$'+(vol/1e3).toFixed(0)+'K':'$'+vol.toFixed(0);
+      const oi=parseFloat(c.openInterest||0)*price;
+      const oiStr=oi>=1e9?'$'+(oi/1e9).toFixed(1)+'B':oi>=1e6?'$'+(oi/1e6).toFixed(0)+'M':'$'+oi.toFixed(0);
+      const funding=parseFloat(c.funding||0)*100;
+      const fundingStr=(funding>=0?'+':'')+funding.toFixed(4)+'%';
+
+      if(price>0){
+        MK[name]={price,chg:+chg.toFixed(2),vol:volStr,oi:oiStr,funding:fundingStr,unit:name,maxLev:asset.maxLeverage||50};
+        allMarkets.push({name,price,chg:+chg.toFixed(2),vol});
+      }
+    });
+
+    // Sort by volume descending
+    allMarkets.sort((a,b)=>b.vol-a.vol);
+
+    renderPills();
+    renderStats();
+    document.getElementById('symLbl').textContent=sym+'-USD';
+  } catch(e){
+    console.error('Failed to load markets:',e.message);
+  }
+}
 function fp(p){if(p>=1000)return'$'+p.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});return'$'+p.toFixed(3);}
 function setLang(l){lang=l;localStorage.setItem(LK,l);const h=document.documentElement;if(l==='ar'){h.setAttribute('lang','ar');h.setAttribute('dir','rtl');document.body.classList.remove('en');document.getElementById('btnAr').classList.add('active');document.getElementById('btnEn').classList.remove('active');}else{h.setAttribute('lang','en');h.setAttribute('dir','ltr');document.body.classList.add('en');document.getElementById('btnEn').classList.add('active');document.getElementById('btnAr').classList.remove('active');}document.querySelectorAll('[data-ar]').forEach(e=>{const t=e.getAttribute('data-'+l);if(t)e.textContent=t;});renderPills();renderStats();updPlBtn();showTab(document.querySelector('.btab.active'),ct);}
-function renderPills(){document.getElementById('mPills').innerHTML=Object.keys(MK).map(s=>`<div class="mpill${s===sym?' active':''}" onclick="selM('${s}')"><span class="mpill-sym">${s}</span><span class="mpill-price">${fp(MK[s].price)}</span><span class="mpill-chg ${MK[s].chg>=0?'up':'dn'}">${MK[s].chg>=0?'+':''}${MK[s].chg}%</span></div>`).join('');}
+function renderPills(){
+  // Show top 10 by volume + current sym always visible
+  const top10=allMarkets.slice(0,10).map(m=>m.name);
+  if(!top10.includes(sym))top10.unshift(sym);
+  const pillSyms=top10.filter(s=>MK[s]);
+  document.getElementById('mPills').innerHTML=
+    pillSyms.map(s=>`<div class="mpill${s===sym?' active':''}" onclick="selM('${s}')"><span class="mpill-sym">${s}</span><span class="mpill-price">${fp(MK[s].price)}</span><span class="mpill-chg ${MK[s].chg>=0?'up':'dn'}">${MK[s].chg>=0?'+':''}${MK[s].chg}%</span></div>`).join('')+
+    `<div class="mpill" onclick="openMktSearch()" title="All markets" style="padding:4px 10px;font-size:14px;">⊕</div>`;
+}
+
+// Market search overlay
+function openMktSearch(){
+  let overlay=document.getElementById('mktOverlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='mktOverlay';
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding-top:80px;';
+    overlay.innerHTML=`
+      <div style="background:#0D0F14;border:1px solid rgba(212,175,55,0.2);border-radius:14px;width:480px;max-height:70vh;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:14px 16px;border-bottom:1px solid rgba(212,175,55,0.08);display:flex;align-items:center;gap:10px;">
+          <input id="mktSearchIn" type="text" placeholder="${lang==='ar'?'ابحث عن سوق...':'Search markets...'}" 
+            style="flex:1;background:transparent;border:none;color:#F2EDD7;font-size:14px;outline:none;" 
+            oninput="filterMkts(this.value)"/>
+          <span onclick="document.getElementById('mktOverlay').remove()" style="color:#6B6550;cursor:pointer;font-size:18px;">✕</span>
+        </div>
+        <div id="mktList" style="overflow-y:auto;flex:1;"></div>
+      </div>`;
+    overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+    document.body.appendChild(overlay);
+    filterMkts('');
+    setTimeout(()=>document.getElementById('mktSearchIn')?.focus(),100);
+  }
+}
+
+function filterMkts(q){
+  const list=document.getElementById('mktList');
+  if(!list)return;
+  const filtered=allMarkets.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())).slice(0,50);
+  list.innerHTML=filtered.map(m=>`
+    <div onclick="selM('${m.name}');document.getElementById('mktOverlay')?.remove();"
+      style="display:flex;justify-content:space-between;padding:10px 16px;cursor:pointer;border-bottom:1px solid rgba(212,175,55,0.05);transition:background 0.15s;"
+      onmouseover="this.style.background='rgba(212,175,55,0.05)'" onmouseout="this.style.background=''">
+      <span style="font-family:var(--mono);font-size:13px;font-weight:600;color:#F2EDD7;">${m.name}-USD</span>
+      <span style="font-family:var(--mono);font-size:12px;color:${m.chg>=0?'#2ECC8A':'#E84545'}">${m.chg>=0?'+':''}${m.chg}%</span>
+    </div>`).join('');
+}
 function renderStats(){const m=MK[sym],t=T[lang];document.getElementById('tStats').innerHTML=`<div class="tstat"><span class="tstat-l">${t.v}</span><span class="tstat-v">${m.vol}</span></div><div class="tstat"><span class="tstat-l">${t.oi}</span><span class="tstat-v">${m.oi}</span></div><div class="tstat"><span class="tstat-l">${t.f}</span><span class="tstat-v ${m.funding.startsWith('+')?'up':'dn'}">${m.funding}</span></div><div class="tstat"><span class="tstat-l">${t.mk}</span><span class="tstat-v">${fp(m.price)}</span></div>`;document.getElementById('symLbl').textContent=sym+'-USD';}
-function selM(s){sym=s;renderPills();renderStats();renderOB();buildChart();document.getElementById('sUnit').textContent=MK[s].unit;document.getElementById('pIn').placeholder=MK[s].price.toLocaleString();updPlBtn();calcO();}
+function selM(s){if(!MK[s])return;sym=s;renderPills();renderStats();renderOB();buildChart();document.getElementById('sUnit').textContent=s;document.getElementById('pIn').placeholder=MK[s]?.price?.toLocaleString()||'';updPlBtn();calcO();}
 function tfS(tf){return{['5m']:300,['1h']:3600,['4h']:14400,['1D']:86400,['1W']:604800}[tf]||3600;}
 // Map timeframe labels to API interval format
 function tfMap(tf){return{['5m']:'5m',['1h']:'1h',['4h']:'4h',['1D']:'1d',['1W']:'1d'}[tf]||'1h';}
@@ -359,33 +456,28 @@ function loadUserWallet(){
   }
 }
 function toast(msg,type='success'){const el=document.getElementById('toastEl');el.textContent=msg;el.className='toast '+type+' show';setTimeout(()=>el.classList.remove('show'),3000);}
-setLang(lang);buildChart();renderOB();showTab(document.querySelector('.btab'),'pos');loadUserWallet();
+setLang(lang);renderOB();showTab(document.querySelector('.btab'),'pos');loadUserWallet();loadAllMarkets().then(()=>buildChart());
 // Fetch live prices from backend every 3 seconds
 async function fetchLivePrices(){
   try {
-    const res=await fetch(`${API}/api/markets/prices`);
-    const data=await res.json();
-    if(data.prices){
-      Object.keys(data.prices).forEach(s=>{
-        if(MK[s])MK[s].price=data.prices[s].price;
+    const res=await fetch(HL_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'allMids'})});
+    const mids=await res.json();
+    if(mids){
+      Object.entries(mids).forEach(([s,p])=>{
+        if(MK[s])MK[s].price=parseFloat(p);
       });
       renderPills();renderStats();
-      // Update live candle tick
-      if(cs){
-        const m=MK[sym],now=Math.floor(Date.now()/1000);
-        const o=m.price*(1+(Math.random()-0.5)*0.001);
-        const c=m.price;
-        const hi=Math.max(o,c)*(1+Math.random()*0.002);
-        const lo=Math.min(o,c)*(1-Math.random()*0.002);
+      if(cs&&MK[sym]){
+        const price=MK[sym].price,now=Math.floor(Date.now()/1000);
+        const o=price*(1+(Math.random()-0.5)*0.001),c=price;
+        const hi=Math.max(o,c)*(1+Math.random()*0.001),lo=Math.min(o,c)*(1-Math.random()*0.001);
         try{cs.update({time:now,open:+o.toFixed(2),high:+hi.toFixed(2),low:+lo.toFixed(2),close:+c.toFixed(2)});}catch(e){}
       }
     }
-  } catch(e){
-    // Silently fail - keep showing last known prices
-  }
+  } catch(e){}
 }
-setInterval(fetchLivePrices, 3000);
-fetchLivePrices(); // fetch immediately on load
+setInterval(fetchLivePrices,3000);
+fetchLivePrices();
 </script>
 </body>
 </html>
