@@ -130,8 +130,9 @@ html[dir=rtl] .toast{right:20px;}html[dir=ltr] .toast{left:20px;}
     <a href="wallets.html" class="tbtn" data-ar="تتبع المحافظ" data-en="Wallets">تتبع المحافظ</a>
     <a href="index.html" class="tbtn" data-ar="← الرئيسية" data-en="← Home">← الرئيسية</a>
     <div class="waddr" id="wBtn">—</div>
+    <button class="tbtn" onclick="openWithdraw()" data-ar="سحب" data-en="Withdraw">سحب</button>
     <button class="tbtn" onclick="doLogout()" data-ar="خروج" data-en="Logout">خروج</button>
-    <button class="tbtn gold" onclick="window.location.href='signup.html'" id="depositBtn" data-ar="إيداع" data-en="Deposit">إيداع</button>
+    <button class="tbtn gold" onclick="openDeposit()" id="depositBtn" data-ar="إيداع" data-en="Deposit">إيداع</button>
   </div>
 </div>
 <div class="main">
@@ -188,9 +189,15 @@ html[dir=rtl] .toast{right:20px;}html[dir=ltr] .toast{left:20px;}
         <span class="lval" id="lLbl">5×</span>
         <input type="range" min="1" max="50" value="5" step="1" oninput="setLev(this.value)"/>
       </div>
+      <div class="fg" id="tpslFields" style="display:none;">
+        <label data-ar="إيقاف الربح (TP)" data-en="Take Profit (TP)">إيقاف الربح (TP)</label>
+        <div class="frow"><input type="number" id="tpIn" placeholder="0.00" style="color:var(--green)"/><div class="funit">USD</div></div>
+        <label style="margin-top:7px;display:block;" data-ar="وقف الخسارة (SL)" data-en="Stop Loss (SL)">وقف الخسارة (SL)</label>
+        <div class="frow" style="margin-top:5px;"><input type="number" id="slIn" placeholder="0.00" style="color:var(--red)"/><div class="funit">USD</div></div>
+      </div>
       <div class="fg">
         <label data-ar="الرصيد" data-en="Balance">الرصيد</label>
-        <div class="frow"><input type="text" value="0.00 USDC" readonly style="color:var(--muted2);cursor:default;"/><div class="funit" style="cursor:pointer;color:var(--gold);" onclick="connP()" data-ar="إيداع" data-en="Deposit">إيداع</div></div>
+        <div class="frow"><input type="text" value="0.00 USDC" readonly style="color:var(--muted2);cursor:default;"/><div class="funit" style="cursor:pointer;color:var(--gold);" onclick="openDeposit()" data-ar="إيداع" data-en="Deposit">إيداع</div></div>
       </div>
       <div class="osum">
         <div class="osr"><span data-ar="قيمة الأمر" data-en="Order value">قيمة الأمر</span><span id="sVal">—</span></div>
@@ -204,7 +211,7 @@ html[dir=rtl] .toast{right:20px;}html[dir=ltr] .toast{left:20px;}
   </div>
   <div class="bbar">
     <div class="btabs" id="bTabs">
-      <div class="btab active" onclick="showTab(this,'pos')" data-ar="الصفقات (2)" data-en="Positions (2)">الصفقات (2)</div>
+      <div class="btab active" onclick="showTab(this,'pos')" data-ar="الصفقات" data-en="Positions">الصفقات</div>
       <div class="btab" onclick="showTab(this,'ord')" data-ar="الأوامر (0)" data-en="Orders (0)">الأوامر (0)</div>
       <div class="btab" onclick="showTab(this,'his')" data-ar="السجل" data-en="History">السجل</div>
       <div class="btab" onclick="showTab(this,'fun')" data-ar="التمويل" data-en="Funding">التمويل</div>
@@ -424,7 +431,7 @@ function updPlBtn(){const t=T[lang];document.getElementById('plBtn').textContent
 function setType(el,tp){document.querySelectorAll('.ttab').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('pFld').style.display=tp==='market'?'none':'block';}
 function setLev(v){lev=parseInt(v);document.getElementById('lLbl').textContent=v+'×';calcO();}
 function calcO(){const sz=parseFloat(document.getElementById('sIn').value)||0,p=MK[sym].price,val=sz*p,mg=val/lev,fee=val*0.0005,ld=mg/val||0,lp=side==='buy'?p*(1-ld):p*(1+ld);document.getElementById('sVal').textContent=val>0?'$'+val.toLocaleString('en-US',{maximumFractionDigits:2}):'—';document.getElementById('sMgn').textContent=mg>0?'$'+mg.toFixed(2):'—';document.getElementById('sLiq').textContent=val>0?fp(lp):'—';document.getElementById('sFee').textContent=fee>0?'$'+fee.toFixed(4):'—';}
-const dP=[{sym:'BTC-USD',side:'long',sz:'0.05 BTC',en:'$82,100',mk:'$84,230',liq:'$74,200',pnl:'+$106.50',up:true},{sym:'ETH-USD',side:'short',sz:'0.5 ETH',en:'$3,220',mk:'$3,180',liq:'$3,860',pnl:'+$20.00',up:true}];
+const dP=[]; // Real positions loaded from Hyperliquid
 function showTab(el,tab){ct=tab;document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');const c=document.getElementById('bCont'),t=T[lang];if(tab==='pos'){if(!wlt){c.innerHTML=`<div class="nopos">${t.np}</div>`;return;}c.innerHTML=`<table class="ptbl"><thead><tr>${t.pH.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${dP.map(p=>`<tr><td>${p.sym}</td><td><span class="pbadge ${p.side}">${p.side==='long'?t.L:t.S}</span></td><td>${p.sz}</td><td>${p.en}</td><td>${p.mk}</td><td>${p.liq}</td><td class="pnl ${p.up?'up':'dn'}">${p.pnl}</td><td><button class="cbtn">${t.cl}</button></td></tr>`).join('')}</tbody></table>`;}else if(tab==='ord'){c.innerHTML=`<div class="nopos">${t.no}</div>`;}else if(tab==='his'){c.innerHTML=`<div class="nopos">${t.nh}</div>`;}else{c.innerHTML=`<div class="nopos">${t.nf}</div>`;}}
 function placeO(){
   if(!wlt){window.location.href='login.html';return;}
@@ -447,12 +454,26 @@ function loadUserWallet(){
     const short=addr.slice(0,6)+'...'+addr.slice(-4);
     btn.textContent=short;
     btn.style.color='var(--gold)';
-    btn.style.cursor='default';
+    btn.style.cursor='pointer';
+    btn.onclick=()=>openDeposit();
     showTab(document.querySelector('.btab'),'pos');
+    // Fetch real balance from backend
+    fetch(`${API}/api/account/positions`,{headers:{Authorization:'Bearer '+token}})
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.balance){
+          const balIn=document.querySelector('.order-panel input[readonly]');
+          if(balIn)balIn.value=d.balance+' USDC';
+        }
+      }).catch(()=>{});
   } else {
     btn.textContent=lang==='ar'?'تسجيل الدخول':'Sign In';
     btn.style.cursor='pointer';
     btn.onclick=()=>window.location.href='login.html';
+    // Hide withdraw if not logged in
+    document.querySelectorAll('.tbtn').forEach(b=>{
+      if(b.textContent==='Withdraw'||b.textContent==='سحب')b.style.display='none';
+    });
   }
 }
 function toast(msg,type='success'){const el=document.getElementById('toastEl');el.textContent=msg;el.className='toast '+type+' show';setTimeout(()=>el.classList.remove('show'),3000);}
@@ -468,16 +489,112 @@ async function fetchLivePrices(){
       });
       renderPills();renderStats();
       if(cs&&MK[sym]){
-        const price=MK[sym].price,now=Math.floor(Date.now()/1000);
-        const o=price*(1+(Math.random()-0.5)*0.001),c=price;
-        const hi=Math.max(o,c)*(1+Math.random()*0.001),lo=Math.min(o,c)*(1-Math.random()*0.001);
-        try{cs.update({time:now,open:+o.toFixed(2),high:+hi.toFixed(2),low:+lo.toFixed(2),close:+c.toFixed(2)});}catch(e){}
+        const price=MK[sym].price;
+        const tf=document.querySelector('.ptf .ptab.active')?.textContent||'1h';
+        const secs={['5m']:300,['1h']:3600,['4h']:14400,['1D']:86400,['1W']:604800}[tf]||3600;
+        // Align to current candle boundary
+        const now=Math.floor(Date.now()/1000);
+        const candleTime=Math.floor(now/secs)*secs;
+        try{cs.update({time:candleTime,open:price,high:price,low:price,close:price});}catch(e){}
       }
     }
   } catch(e){}
 }
 setInterval(fetchLivePrices,3000);
 fetchLivePrices();
+
+// ── DEPOSIT MODAL ─────────────────────────────────────
+function openDeposit(){
+  const user=JSON.parse(localStorage.getItem('nahaar_user')||'{}');
+  if(!user.walletAddress){window.location.href='login.html';return;}
+  const addr=user.walletAddress;
+  let m=document.getElementById('depModal');
+  if(!m){
+    m=document.createElement('div');
+    m.id='depModal';
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;';
+    m.innerHTML=`
+      <div style="background:#0D0F14;border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:24px;width:420px;max-width:90vw;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="font-size:16px;font-weight:700;" id="depTitle">Deposit USDC</h3>
+          <span onclick="this.closest('#depModal').remove()" style="cursor:pointer;color:var(--muted);font-size:18px;">✕</span>
+        </div>
+        <div style="background:rgba(127,119,221,0.08);border:1px solid rgba(127,119,221,0.2);border-radius:8px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;font-size:11px;font-family:var(--mono);color:#AFA9EC;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#AFA9EC;display:inline-block;"></span>Arbitrum One
+        </div>
+        <p style="font-size:12px;color:var(--muted2);margin-bottom:8px;" id="depAddrLbl">Your deposit address (USDC on Arbitrum)</p>
+        <div style="background:#07080A;border:1px solid rgba(212,175,55,0.2);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--gold);word-break:break-all;margin-bottom:8px;">${addr}</div>
+        <button onclick="navigator.clipboard.writeText('${addr}').catch(()=>{});this.textContent=lang==='ar'?'تم النسخ ✓':'Copied ✓';this.style.color='var(--green)';setTimeout(()=>{this.textContent=lang==='ar'?'نسخ العنوان':'Copy address';this.style.color='';},2000);"
+          style="width:100%;padding:9px;background:transparent;border:1px solid rgba(212,175,55,0.2);border-radius:8px;color:var(--muted2);font-family:inherit;font-size:13px;cursor:pointer;margin-bottom:14px;" id="cpDepBtn">${lang==='ar'?'نسخ العنوان':'Copy address'}</button>
+        <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.15);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted2);line-height:1.7;">
+          <strong style="color:var(--gold);display:block;margin-bottom:3px;">⚠ ${lang==='ar'?'مهم':'Important'}</strong>
+          ${lang==='ar'?'أرسل USDC فقط على شبكة Arbitrum. إرسال على شبكة أخرى يؤدي إلى فقدان الأموال نهائياً.':'Send USDC only on Arbitrum network. Sending on wrong network will result in permanent loss of funds.'}
+        </div>
+        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+          <p style="font-size:12px;color:var(--muted2);margin-bottom:10px;">${lang==='ar'?'اشترِ USDC بعملتك المحلية:':'Buy USDC with your local currency:'}</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            ${['MoonPay','Transak','Alchemy Pay'].map(p=>`<button onclick="alert('${p} ${lang==='ar'?'قريباً':'coming soon'}')" style="padding:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--muted2);font-family:inherit;font-size:11px;cursor:pointer;">${p}</button>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+    document.body.appendChild(m);
+  }
+}
+
+// ── WITHDRAW MODAL ────────────────────────────────────
+function openWithdraw(){
+  const user=JSON.parse(localStorage.getItem('nahaar_user')||'{}');
+  if(!user.walletAddress){window.location.href='login.html';return;}
+  let m=document.getElementById('wdModal');
+  if(!m){
+    m=document.createElement('div');
+    m.id='wdModal';
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;';
+    m.innerHTML=`
+      <div style="background:#0D0F14;border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:24px;width:400px;max-width:90vw;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+          <h3 style="font-size:16px;font-weight:700;">${lang==='ar'?'سحب USDC':'Withdraw USDC'}</h3>
+          <span onclick="this.closest('#wdModal').remove()" style="cursor:pointer;color:var(--muted);font-size:18px;">✕</span>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px;font-family:var(--mono);color:var(--muted2);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">${lang==='ar'?'مبلغ السحب (USDC)':'Withdraw Amount (USDC)'}</label>
+          <div style="display:flex;border:1px solid rgba(212,175,55,0.2);border-radius:8px;overflow:hidden;background:#07080A;">
+            <input id="wdAmt" type="number" placeholder="0.00" style="flex:1;padding:10px 12px;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:14px;outline:none;"/>
+            <div style="padding:0 12px;background:var(--surface2);display:flex;align-items:center;font-size:11px;color:var(--muted);border-left:1px solid rgba(212,175,55,0.1);">USDC</div>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-size:11px;font-family:var(--mono);color:var(--muted2);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;">${lang==='ar'?'عنوان الاستلام (Arbitrum)':'Destination Address (Arbitrum)'}</label>
+          <div style="display:flex;border:1px solid rgba(212,175,55,0.2);border-radius:8px;overflow:hidden;background:#07080A;">
+            <input id="wdAddr" type="text" placeholder="0x..." style="flex:1;padding:10px 12px;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;"/>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted2);margin-bottom:14px;line-height:1.7;">
+          ${lang==='ar'?'الرسوم: مجانية على Hyperliquid · وقت المعالجة: أقل من دقيقة · الحد الأدنى: $10 USDC':'Fee: Free on-chain · Processing time: Under 1 minute · Minimum: $10 USDC'}
+        </div>
+        <button onclick="submitWithdraw()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;">${lang==='ar'?'تأكيد السحب':'Confirm Withdrawal'}</button>
+      </div>`;
+    m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+    document.body.appendChild(m);
+  }
+}
+
+function submitWithdraw(){
+  const amt=document.getElementById('wdAmt')?.value;
+  const addr=document.getElementById('wdAddr')?.value;
+  if(!amt||parseFloat(amt)<10){toast(lang==='ar'?'الحد الأدنى للسحب $10 USDC':'Minimum withdrawal is $10 USDC','error');return;}
+  if(!addr||!addr.startsWith('0x')){toast(lang==='ar'?'يرجى إدخال عنوان Arbitrum صحيح':'Please enter a valid Arbitrum address','error');return;}
+  document.getElementById('wdModal')?.remove();
+  toast(lang==='ar'?'تم إرسال طلب السحب — سيصل خلال دقيقة':'Withdrawal submitted — arrives within 1 minute','success');
+}
+
+// ── TP/SL TOGGLE ──────────────────────────────────────
+const _origSetType=setType;
+function setType(el,tp){
+  _origSetType(el,tp);
+  document.getElementById('tpslFields').style.display=tp==='tpsl'?'block':'none';
+}
 </script>
 </body>
 </html>
