@@ -129,8 +129,9 @@ html[dir=rtl] .toast{right:20px;}html[dir=ltr] .toast{left:20px;}
     <a href="copytrade.html" class="tbtn" data-ar="نسخ التداول" data-en="Copy Trade">نسخ التداول</a>
     <a href="wallets.html" class="tbtn" data-ar="تتبع المحافظ" data-en="Wallets">تتبع المحافظ</a>
     <a href="index.html" class="tbtn" data-ar="← الرئيسية" data-en="← Home">← الرئيسية</a>
-    <div class="waddr" onclick="connP()" id="wBtn" data-ar="ربط المحفظة" data-en="Connect Wallet">ربط المحفظة</div>
-    <button class="tbtn gold" onclick="connP()" data-ar="إيداع" data-en="Deposit">إيداع</button>
+    <div class="waddr" id="wBtn">—</div>
+    <button class="tbtn" onclick="doLogout()" data-ar="خروج" data-en="Logout">خروج</button>
+    <button class="tbtn gold" onclick="window.location.href='signup.html'" id="depositBtn" data-ar="إيداع" data-en="Deposit">إيداع</button>
   </div>
 </div>
 <div class="main">
@@ -214,8 +215,8 @@ html[dir=rtl] .toast{right:20px;}html[dir=ltr] .toast{left:20px;}
 <div class="toast" id="toastEl"></div>
 <script>
 const LK='nahaar_lang';let lang=localStorage.getItem(LK)||'ar';
-const T={ar:{sp:'الفارق',v:'الحجم 24س',oi:'الفائدة المفتوحة',f:'التمويل',mk:'سعر السوق',np:'ربط المحفظة لعرض الصفقات',no:'لا توجد أوامر',nh:'ربط المحفظة للسجل',nf:'ربط المحفظة للتمويل',pH:['السوق','الاتجاه','الحجم','الدخول','السعر','التصفية','ر/خ','إغلاق'],L:'شراء',S:'بيع',cl:'إغلاق',cm:'ربط MetaMask بنهار؟',tc:'تم ربط المحفظة',to:'تم إرسال الأمر',ts:'يرجى إدخال حجم صحيح',buy:'شراء',sell:'بيع'},
-en:{sp:'Spread',v:'24h Vol',oi:'Open Int.',f:'Funding',mk:'Mark Price',np:'Connect wallet to view positions',no:'No open orders',nh:'Connect wallet for history',nf:'Connect wallet for funding',pH:['Market','Side','Size','Entry','Mark','Liq.','PnL','Close'],L:'Long',S:'Short',cl:'Close',cm:'Connect MetaMask to Nahaar?',tc:'Wallet connected',to:'Order submitted',ts:'Enter a valid size',buy:'Long',sell:'Short'}};
+const T={ar:{sp:'الفارق',v:'الحجم 24س',oi:'الفائدة المفتوحة',f:'التمويل',mk:'سعر السوق',np:'سجّل دخولك لعرض الصفقات المفتوحة',no:'لا توجد أوامر',nh:'سجّل دخولك لعرض السجل',nf:'سجّل دخولك لعرض التمويل',pH:['السوق','الاتجاه','الحجم','الدخول','السعر','التصفية','ر/خ','إغلاق'],L:'شراء',S:'بيع',cl:'إغلاق',to:'تم إرسال الأمر',ts:'يرجى إدخال حجم صحيح',buy:'شراء',sell:'بيع'},
+en:{sp:'Spread',v:'24h Vol',oi:'Open Int.',f:'Funding',mk:'Mark Price',np:'Sign in to view open positions',no:'No open orders',nh:'Sign in for history',nf:'Sign in for funding',pH:['Market','Side','Size','Entry','Mark','Liq.','PnL','Close'],L:'Long',S:'Short',cl:'Close',to:'Order submitted',ts:'Enter a valid size',buy:'Long',sell:'Short'}};
 const MK={BTC:{price:84230,chg:2.34,vol:'$4.2B',oi:'$892M',funding:'+0.0042%',unit:'BTC'},ETH:{price:3180,chg:-1.12,vol:'$1.8B',oi:'$420M',funding:'-0.0021%',unit:'ETH'},SOL:{price:142.8,chg:5.61,vol:'$620M',oi:'$188M',funding:'+0.0071%',unit:'SOL'},AVAX:{price:34.2,chg:-0.88,vol:'$180M',oi:'$62M',funding:'-0.0015%',unit:'AVAX'},ARB:{price:0.824,chg:1.23,vol:'$95M',oi:'$28M',funding:'+0.0008%',unit:'ARB'}};
 let sym='BTC',side='buy',lev=5,wlt=false,chart=null,cs=null,ct='pos';
 function fp(p){if(p>=1000)return'$'+p.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});return'$'+p.toFixed(3);}
@@ -243,10 +244,37 @@ function setLev(v){lev=parseInt(v);document.getElementById('lLbl').textContent=v
 function calcO(){const sz=parseFloat(document.getElementById('sIn').value)||0,p=MK[sym].price,val=sz*p,mg=val/lev,fee=val*0.0005,ld=mg/val||0,lp=side==='buy'?p*(1-ld):p*(1+ld);document.getElementById('sVal').textContent=val>0?'$'+val.toLocaleString('en-US',{maximumFractionDigits:2}):'—';document.getElementById('sMgn').textContent=mg>0?'$'+mg.toFixed(2):'—';document.getElementById('sLiq').textContent=val>0?fp(lp):'—';document.getElementById('sFee').textContent=fee>0?'$'+fee.toFixed(4):'—';}
 const dP=[{sym:'BTC-USD',side:'long',sz:'0.05 BTC',en:'$82,100',mk:'$84,230',liq:'$74,200',pnl:'+$106.50',up:true},{sym:'ETH-USD',side:'short',sz:'0.5 ETH',en:'$3,220',mk:'$3,180',liq:'$3,860',pnl:'+$20.00',up:true}];
 function showTab(el,tab){ct=tab;document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');const c=document.getElementById('bCont'),t=T[lang];if(tab==='pos'){if(!wlt){c.innerHTML=`<div class="nopos">${t.np}</div>`;return;}c.innerHTML=`<table class="ptbl"><thead><tr>${t.pH.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${dP.map(p=>`<tr><td>${p.sym}</td><td><span class="pbadge ${p.side}">${p.side==='long'?t.L:t.S}</span></td><td>${p.sz}</td><td>${p.en}</td><td>${p.mk}</td><td>${p.liq}</td><td class="pnl ${p.up?'up':'dn'}">${p.pnl}</td><td><button class="cbtn">${t.cl}</button></td></tr>`).join('')}</tbody></table>`;}else if(tab==='ord'){c.innerHTML=`<div class="nopos">${t.no}</div>`;}else if(tab==='his'){c.innerHTML=`<div class="nopos">${t.nh}</div>`;}else{c.innerHTML=`<div class="nopos">${t.nf}</div>`;}}
-function placeO(){if(!wlt){connP();return;}const sz=document.getElementById('sIn').value,t=T[lang];if(!sz||parseFloat(sz)<=0){toast(t.ts,'error');return;}toast(`${t.to}: ${side==='buy'?t.buy:t.sell} ${sz} ${sym}-USD`,'success');}
-function connP(){if(wlt)return;const t=T[lang];if(confirm(t.cm)){wlt=true;const b=document.getElementById('wBtn');b.textContent='0x3f...a2c1';b.style.color='var(--gold)';showTab(document.querySelector('.btab'),'pos');toast(t.tc,'success');}}
+function placeO(){
+  if(!wlt){window.location.href='login.html';return;}
+  const sz=document.getElementById('sIn').value,t=T[lang];
+  if(!sz||parseFloat(sz)<=0){toast(t.ts,'error');return;}
+  toast(`${t.to}: ${side==='buy'?t.buy:t.sell} ${sz} ${sym}-USD`,'success');
+}
+function doLogout(){
+  localStorage.removeItem('nahaar_token');
+  localStorage.removeItem('nahaar_user');
+  window.location.href='index.html';
+}
+function loadUserWallet(){
+  const user=JSON.parse(localStorage.getItem('nahaar_user')||'{}');
+  const token=localStorage.getItem('nahaar_token');
+  const btn=document.getElementById('wBtn');
+  if(token&&user.walletAddress){
+    wlt=true;
+    const addr=user.walletAddress;
+    const short=addr.slice(0,6)+'...'+addr.slice(-4);
+    btn.textContent=short;
+    btn.style.color='var(--gold)';
+    btn.style.cursor='default';
+    showTab(document.querySelector('.btab'),'pos');
+  } else {
+    btn.textContent=lang==='ar'?'تسجيل الدخول':'Sign In';
+    btn.style.cursor='pointer';
+    btn.onclick=()=>window.location.href='login.html';
+  }
+}
 function toast(msg,type='success'){const el=document.getElementById('toastEl');el.textContent=msg;el.className='toast '+type+' show';setTimeout(()=>el.classList.remove('show'),3000);}
-setLang(lang);buildChart();renderOB();showTab(document.querySelector('.btab'),'pos');
+setLang(lang);buildChart();renderOB();showTab(document.querySelector('.btab'),'pos');loadUserWallet();
 setInterval(()=>{Object.keys(MK).forEach(s=>{MK[s].price*=(1+(Math.random()-0.501)*0.0003);});renderPills();renderStats();renderOB();if(cs){const m=MK[sym],now=Math.floor(Date.now()/1000),o=m.price*(1+(Math.random()-0.5)*0.002),c=m.price,hi=Math.max(o,c)*(1+Math.random()*0.003),lo=Math.min(o,c)*(1-Math.random()*0.003);try{cs.update({time:now,open:+o.toFixed(2),high:+hi.toFixed(2),low:+lo.toFixed(2),close:+c.toFixed(2)});}catch(e){}}},2500);
 </script>
 </body>
