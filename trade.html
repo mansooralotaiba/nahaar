@@ -992,11 +992,75 @@ function calcO(){
   document.getElementById('sLiq').textContent=val>0?fp(lp):'—';
   document.getElementById('sFee').textContent=fee>0?'$'+fee.toFixed(4):'—';
 }
-function placeO(){
+async function placeO(){
   if(!wlt){window.location.href='login.html';return;}
   const sz=document.getElementById('sIn').value;
-  if(!sz||parseFloat(sz)<=0){showToast(lang==='ar'?'يرجى إدخال حجم صحيح':'ENTER VALID SIZE','err');return;}
-  showToast((lang==='ar'?'تم إرسال الأمر':'ORDER SUBMITTED')+': '+(side==='buy'?'LONG':'SHORT')+' '+sz+' '+sym+'-USD','ok');
+  const ar=lang==='ar';
+  if(!sz||parseFloat(sz)<=0){showToast(ar?'يرجى إدخال حجم صحيح':'ENTER VALID SIZE','err');return;}
+
+  const price=MK[sym]?.price||0;
+  const orderType=document.querySelector('.t-btn.on')?.getAttribute('data-en')||'LIMIT';
+  const limitPrice=document.getElementById('pIn').value;
+  const displayPrice=orderType==='MARKET'?(ar?'سعر السوق':'MARKET PRICE'):('$'+parseFloat(limitPrice||price).toLocaleString());
+
+  // Confirmation
+  const confirmMsg=ar
+    ?`تأكيد الأمر:
+
+${side==='buy'?'شراء LONG':'بيع SHORT'} ${sz} ${sym}-USD
+السعر: ${displayPrice}
+الرافعة: ${lev}×
+
+هل تريد المتابعة؟`
+    :`CONFIRM ORDER:
+
+${side==='buy'?'LONG':'SHORT'} ${sz} ${sym}-USD
+PRICE: ${displayPrice}
+LEVERAGE: ${lev}×
+
+PROCEED?`;
+
+  if(!confirm(confirmMsg))return;
+
+  // Show loading
+  const btn=document.getElementById('plBtn');
+  const orig=btn.textContent;
+  btn.textContent=ar?'جارٍ التنفيذ...':'EXECUTING...';
+  btn.disabled=true;
+
+  try{
+    const r=await fetch(`${API}/api/orders/place`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+userToken},
+      body:JSON.stringify({
+        symbol:sym,
+        side,
+        orderType:orderType.toLowerCase(),
+        size:parseFloat(sz),
+        limitPrice:limitPrice?parseFloat(limitPrice):null,
+        leverage:lev,
+      })
+    });
+    const d=await r.json();
+
+    if(d.success){
+      showToast(`✓ ${ar?'تم تنفيذ الأمر':'ORDER EXECUTED'}: ${side==='buy'?'LONG':'SHORT'} ${sz} ${sym} ${d.order.status==='filled'?'@ '+d.order.price:''}','ok');
+      document.getElementById('sIn').value='';
+      calcO();
+      // Refresh balance after short delay
+      setTimeout(()=>{
+        fetch(`${API}/api/account/balance`,{headers:{Authorization:'Bearer '+userToken}})
+          .then(r=>r.json()).then(d=>{if(d.success)document.getElementById('balVal').textContent=parseFloat(d.tradingBalance).toFixed(2)+' USDC';});
+      },2000);
+    }else{
+      showToast('❌ '+(d.error||'Order failed'),'err');
+    }
+  }catch(e){
+    showToast('❌ '+(ar?'خطأ في الاتصال':'CONNECTION ERROR'),'err');
+  }finally{
+    btn.textContent=orig;
+    btn.disabled=false;
+  }
 }
 
 // ── POSITIONS ─────────────────────────────────────────
