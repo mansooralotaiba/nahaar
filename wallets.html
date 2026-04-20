@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>نهار — تتبع المحافظ</title>
+<title>نهار — Whale Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#07080A;--surface:#0D0F14;--surface2:#13161D;--border:rgba(212,175,55,0.08);--border2:rgba(212,175,55,0.18);--border3:rgba(212,175,55,0.32);--gold:#D4AF37;--gold2:#F0D060;--gold3:#A8882A;--gold-dim:rgba(212,175,55,0.10);--red:#E84545;--green:#2ECC8A;--text:#F2EDD7;--muted:#6B6550;--muted2:#9D9478;--font-ar:'Tajawal',sans-serif;--font-en:'Syne',sans-serif;--mono:'DM Mono',monospace;}
@@ -114,7 +114,7 @@ html[dir=rtl] .trade-table th,.trade-table td{text-align:right;}html[dir=ltr] .t
   <div class="nav-links">
     <a href="trade.html" class="nav-link" data-ar="التداول" data-en="Trade">التداول</a>
     <a href="copytrade.html" class="nav-link" data-ar="نسخ التداول" data-en="Copy Trade">نسخ التداول</a>
-    <a href="wallets.html" class="nav-link active" data-ar="تتبع المحافظ" data-en="Wallets">تتبع المحافظ</a>
+    <a href="wallets.html" class="nav-link active" data-ar="تتبع الحيتان" data-en="Whale Tracker">تتبع الحيتان</a>
   </div>
   <div class="nav-right">
     <div class="ltog"><div class="lbtn active" id="btnAr" onclick="setLang('ar')">AR</div><div class="ldv"></div><div class="lbtn" id="btnEn" onclick="setLang('en')">EN</div></div>
@@ -124,22 +124,22 @@ html[dir=rtl] .trade-table th,.trade-table td{text-align:right;}html[dir=ltr] .t
 
 <div class="page">
   <div class="page-hdr">
-    <h1 data-ar="تتبع محافظ المتداولين" data-en="Trader Wallet Tracker">تتبع محافظ المتداولين</h1>
-    <p data-ar="تابع أفضل المحافظ على السلسلة. انظر ما يتداولونه لحظة بلحظة وتعلم من استراتيجياتهم." data-en="Follow the best on-chain wallets. See exactly what they're trading in real time and learn from their strategies.">تابع أفضل المحافظ على السلسلة. انظر ما يتداولونه لحظة بلحظة وتعلم من استراتيجياتهم.</p>
+    <h1 data-ar="تتبع الحيتان 🐋" data-en="Whale Tracker 🐋">تتبع الحيتان 🐋</h1>
+    <p data-ar="تتبع أكبر المحافظ على البلوكشين. اعرف ما يتداوله الحيتان لحظة بلحظة وتداول معهم." data-en="Track the biggest on-chain wallets in real time. See what whales are trading and follow their moves.">تتبع أكبر المحافظ على البلوكشين. اعرف ما يتداوله الحيتان لحظة بلحظة وتداول معهم.</p>
   </div>
 
   <!-- SEARCH -->
   <div class="search-bar">
     <div class="search-wrap">
       <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="addrSearch" data-placeholder-ar="أدخل عنوان محفظة أو اسم مستعار... (0x...)" data-placeholder-en="Enter wallet address or alias... (0x...)"/>
+      <input type="text" id="addrSearch" data-placeholder-ar="ابحث عن حوت... عنوان أو اسم (0x...)" data-placeholder-en="Search whale... address or alias (0x...)"/>
     </div>
     <button class="search-btn" onclick="searchWallet()" data-ar="بحث" data-en="Search">بحث</button>
   </div>
 
   <!-- WATCHED WALLETS -->
   <div class="watched-section" id="watchedSection">
-    <div class="section-title" data-ar="محافظي المتابَعة" data-en="My Watched Wallets">محافظي المتابَعة</div>
+    <div class="section-title" data-ar="الحيتان المتابَعة 🐋" data-en="My Watched Whales 🐋">الحيتان المتابَعة 🐋</div>
     <div class="watched-grid" id="watchedGrid"></div>
   </div>
 
@@ -166,7 +166,7 @@ html[dir=rtl] .trade-table th,.trade-table td{text-align:right;}html[dir=ltr] .t
   <!-- LEADERBOARD -->
   <div class="section-hdr">
     <div>
-      <div class="section-title" data-ar="أفضل المحافظ — الأسبوع الماضي" data-en="Top Wallets — Last 7 Days">أفضل المحافظ — الأسبوع الماضي</div>
+      <div class="section-title" data-ar="أكبر الحيتان — الأسبوع الماضي 🐋" data-en="Top Whales — Last 7 Days 🐋">أكبر الحيتان — الأسبوع الماضي 🐋</div>
       <div class="section-sub" data-ar="مرتبة حسب صافي الربح" data-en="Ranked by net PnL">مرتبة حسب صافي الربح</div>
     </div>
     <div class="sort-tabs">

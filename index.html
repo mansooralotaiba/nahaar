@@ -193,8 +193,14 @@ html[dir=ltr] .footer-disclaimer{text-align:right;}
       <div class="lang-divider"></div>
       <div class="lang-btn" id="btnEn" onclick="setLang('en')">EN</div>
     </div>
-    <a href="login.html" class="btn-ghost" data-ar="تسجيل الدخول" data-en="Sign In">تسجيل الدخول</a>
-    <a href="signup.html" class="btn-gold" data-ar="ابدأ الآن" data-en="Get Started">ابدأ الآن</a>
+    <div id="navAuthBtns">
+      <a href="login.html" class="btn-ghost" data-ar="تسجيل الدخول" data-en="Sign In">تسجيل الدخول</a>
+      <a href="signup.html" class="btn-gold" data-ar="ابدأ الآن" data-en="Get Started">ابدأ الآن</a>
+    </div>
+    <div id="navLoggedIn" style="display:none;align-items:center;gap:8px;">
+      <a href="trade.html" class="btn-gold" data-ar="التداول ←" data-en="Trade →">التداول ←</a>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);padding:5px 10px;border:1px solid rgba(212,175,55,0.3);border-radius:7px;cursor:pointer;" id="navWalletAddr" onclick="window.location.href='trade.html'">—</div>
+    </div>
   </div>
 </nav>
 
@@ -208,7 +214,7 @@ html[dir=ltr] .footer-disclaimer{text-align:right;}
   <div class="hero-tagline" data-ar="تداول العقود الآجلة باحترافية" data-en="Professional Perpetuals Trading">تداول العقود الآجلة باحترافية</div>
   <p class="hero-sub" data-ar="منصة التداول الرائدة للمتداولين العرب — رافعة مالية تصل إلى 50×، تسوية فورية، بلا حضانة وبلا حدود." data-en="The leading trading platform for Arab traders — up to 50× leverage, instant settlement, non-custodial and borderless.">منصة التداول الرائدة للمتداولين العرب — رافعة مالية تصل إلى 50×، تسوية فورية، بلا حضانة وبلا حدود.</p>
   <div class="hero-actions">
-    <a href="signup.html" class="btn-gold btn-lg" data-ar="افتح حسابك مجاناً" data-en="Open Free Account">افتح حسابك مجاناً</a>
+    <a href="signup.html" class="btn-gold btn-lg" id="heroCta" data-ar="افتح حسابك مجاناً" data-en="Open Free Account">افتح حسابك مجاناً</a>
     <a href="trade.html" class="btn-ghost btn-lg" data-ar="استعرض الأسواق ←" data-en="View Markets →">استعرض الأسواق ←</a>
   </div>
   <div class="hero-stats">
@@ -327,7 +333,7 @@ html[dir=ltr] .footer-disclaimer{text-align:right;}
   <div class="gold-line"></div>
   <h2 data-ar="مستعد للتداول<br/><span>على السلسلة؟</span>" data-en="Ready to Trade<br/><span>On-Chain?</span>">مستعد للتداول<br/><span>على السلسلة؟</span></h2>
   <p data-ar="انضم إلى آلاف المتداولين الذين يثقون في نهار" data-en="Join thousands of traders already using Nahaar">انضم إلى آلاف المتداولين الذين يثقون في نهار</p>
-  <a href="signup.html" class="btn-gold btn-lg" data-ar="افتح حسابك مجاناً ←" data-en="Create Free Account →">افتح حسابك مجاناً ←</a>
+  <a href="signup.html" class="btn-gold btn-lg" id="bottomCta" data-ar="افتح حسابك مجاناً ←" data-en="Create Free Account →">افتح حسابك مجاناً ←</a>
 </section>
 
 <footer>
@@ -440,6 +446,27 @@ setInterval(() => { bp += (Math.random()-0.501)*60; document.getElementById('moc
 
 // Init
 setLang(currentLang);
+
+// Auth check — if logged in, show trading buttons instead of sign in/get started
+function checkAuth() {
+  const token = localStorage.getItem('nahaar_token');
+  const user = JSON.parse(localStorage.getItem('nahaar_user') || '{}');
+  if (token && user.walletAddress) {
+    // Hide sign in / get started
+    document.getElementById('navAuthBtns').style.display = 'none';
+    // Show trade button + wallet address
+    const loggedIn = document.getElementById('navLoggedIn');
+    loggedIn.style.display = 'flex';
+    const short = user.walletAddress.slice(0,6) + '...' + user.walletAddress.slice(-4);
+    document.getElementById('navWalletAddr').textContent = short;
+    // Update CTA buttons to go to trade instead of signup
+    const heroCta = document.getElementById('heroCta');
+    if (heroCta) { heroCta.href = 'trade.html'; heroCta.setAttribute('data-ar','افتح محطة التداول ←'); heroCta.setAttribute('data-en','Open Trading Terminal →'); setLang(currentLang); }
+    const bottomCta = document.getElementById('bottomCta');
+    if (bottomCta) { bottomCta.href = 'trade.html'; bottomCta.setAttribute('data-ar','افتح محطة التداول ←'); bottomCta.setAttribute('data-en','Open Trading Terminal →'); setLang(currentLang); }
+  }
+}
+checkAuth();
 </script>
 </body>
 </html>
