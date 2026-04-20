@@ -898,11 +898,8 @@ function openOnramp(provider){
     showDepInstructions();
     return;
   }
-  // Open in centered popup window
-  const w=480,h=680;
-  const left=(window.screen.width-w)/2;
-  const top=(window.screen.height-h)/2;
-  window.open(url,'nahaar_deposit',`width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+  // Open in new tab - works without API key
+  window.open(url,'_blank');
 }
 
 function showDepInstructions(){
