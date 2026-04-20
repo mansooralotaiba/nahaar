@@ -444,6 +444,23 @@ html[dir=rtl] .toast{right:18px;}html[dir=ltr] .toast{left:18px;}
     <div class="net-badge"><div class="net-dot"></div>Arbitrum One</div>
     <div class="dep-addr" id="depAddrText">—</div>
     <button class="dep-copy" id="depCopyBtn" onclick="copyDepAddr()" data-ar="نسخ العنوان" data-en="Copy address">نسخ العنوان</button>
+
+    <!-- Wallet balance + transfer button -->
+    <div id="walletBalBox" style="background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:11px;font-family:var(--mono);color:var(--muted2);" id="arbBalLbl">رصيد المحفظة (Arbitrum)</span>
+        <button onclick="loadWalletBal()" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--mono);">↻</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--text);" id="arbUsdcBal">—</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);" id="arbEthBal">ETH: —</div>
+        </div>
+        <button id="transferBtn" onclick="transferToHL()" style="padding:8px 16px;background:linear-gradient(135deg,var(--gold),var(--gold3));color:#000;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all 0.2s;" data-ar="نقل للتداول ←" data-en="Transfer to Trading →">نقل للتداول ←</button>
+      </div>
+      <div id="transferStatus" style="margin-top:8px;font-size:11px;font-family:var(--mono);display:none;"></div>
+    </div>
+
     <div class="dep-warn">
       <strong data-ar="⚠ تنبيه مهم" data-en="⚠ Important">⚠ تنبيه مهم</strong>
       <span data-ar="أرسل USDC فقط على شبكة Arbitrum. الشبكات الأخرى ستؤدي إلى فقدان الأموال." data-en="Send USDC only on Arbitrum network. Other networks will result in permanent loss.">أرسل USDC فقط على شبكة Arbitrum.</span>
@@ -854,6 +871,7 @@ function openDeposit(){
   if(!userAddr){window.location.href='login.html';return;}
   document.getElementById('depAddrText').textContent=userAddr;
   document.getElementById('depModal').classList.add('open');
+  loadWalletBal(); // auto-load balance when modal opens
   // Update onramp button labels for current language
   const ar=lang==='ar';
   const mpDesc=document.getElementById('mpDesc');
@@ -968,6 +986,112 @@ function doLogout(){
   localStorage.removeItem('nahaar_token');
   localStorage.removeItem('nahaar_user');
   window.location.href='index.html';
+}
+
+// ── WALLET BALANCE + TRANSFER ─────────────────────────
+async function loadWalletBal(){
+  const ar=lang==='ar';
+  const lbl=document.getElementById('arbBalLbl');
+  const usdcEl=document.getElementById('arbUsdcBal');
+  const ethEl=document.getElementById('arbEthBal');
+  if(lbl)lbl.textContent=ar?'جارٍ التحميل...':'Loading...';
+  try{
+    const r=await fetch(`${API}/api/account/wallet-balance`,{
+      headers:{Authorization:'Bearer '+userToken}
+    });
+    const d=await r.json();
+    if(d.success){
+      usdcEl.textContent=parseFloat(d.usdc).toFixed(2)+' USDC';
+      ethEl.textContent='ETH: '+parseFloat(d.eth).toFixed(6);
+      if(lbl)lbl.textContent=ar?'رصيد المحفظة (Arbitrum)':'Wallet Balance (Arbitrum)';
+      // Show warning if no ETH for gas
+      if(parseFloat(d.eth)<0.0001){
+        const status=document.getElementById('transferStatus');
+        status.style.display='block';
+        status.style.color='#E84545';
+        status.textContent=ar?'⚠ تحتاج ETH للغاز (~$0.10) على Arbitrum لتنفيذ النقل':'⚠ Need ETH for gas (~$0.10) on Arbitrum to transfer';
+      }
+    }
+  }catch(e){
+    if(usdcEl)usdcEl.textContent='—';
+    if(lbl)lbl.textContent=ar?'رصيد المحفظة (Arbitrum)':'Wallet Balance (Arbitrum)';
+  }
+}
+
+async function transferToHL(){
+  const ar=lang==='ar';
+  const usdcText=document.getElementById('arbUsdcBal')?.textContent||'0';
+  const amount=parseFloat(usdcText);
+  const btn=document.getElementById('transferBtn');
+  const status=document.getElementById('transferStatus');
+
+  if(!amount||amount<5){
+    status.style.display='block';
+    status.style.color='#E84545';
+    status.textContent=ar?'الحد الأدنى للإيداع 5 USDC':'Minimum deposit is 5 USDC';
+    return;
+  }
+
+  // Confirm with user
+  const msg=ar
+    ?`هل تريد نقل ${amount.toFixed(2)} USDC إلى حساب التداول؟
+
+سيستغرق حوالي دقيقة واحدة.`
+    :`Transfer ${amount.toFixed(2)} USDC to your trading account?
+
+This takes about 1 minute.`;
+  if(!confirm(msg))return;
+
+  // Show loading state
+  btn.textContent=ar?'جارٍ النقل...':'Transferring...';
+  btn.disabled=true;
+  btn.style.opacity='0.6';
+  status.style.display='block';
+  status.style.color='var(--muted2)';
+  status.textContent=ar?'⏳ جارٍ إرسال المعاملة إلى البلوكشين...':'⏳ Submitting transaction to blockchain...';
+
+  try{
+    const r=await fetch(`${API}/api/account/deposit-to-hl`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+userToken},
+      body:JSON.stringify({amount:amount.toFixed(6)})
+    });
+    const d=await r.json();
+
+    if(d.success){
+      status.style.color='var(--green)';
+      status.textContent=ar
+        ?`✅ تم النقل بنجاح! سيظهر رصيدك خلال دقيقة. TX: ${d.txHash?.slice(0,12)}...`
+        :`✅ Transfer successful! Balance updates in ~1 minute. TX: ${d.txHash?.slice(0,12)}...`;
+      btn.textContent=ar?'تم ✓':'Done ✓';
+      btn.style.background='var(--green-dim)';
+      btn.style.color='var(--green)';
+      // Refresh balance after 5 seconds
+      setTimeout(()=>loadWalletBal(),5000);
+      // Activate referral
+      fetch(`${API}/api/account/activate`,{method:'POST',headers:{Authorization:'Bearer '+userToken}}).catch(()=>{});
+    }else if(d.needsEth){
+      status.style.color='#E84545';
+      status.textContent=ar
+        ?'⚠ تحتاج ETH للغاز على Arbitrum. أرسل ~$0.50 ETH إلى عنوان محفظتك على شبكة Arbitrum.'
+        :'⚠ Need ETH for gas on Arbitrum. Send ~$0.50 ETH to your wallet address on Arbitrum network.';
+      btn.textContent=ar?'نقل للتداول ←':'Transfer to Trading →';
+      btn.disabled=false;
+      btn.style.opacity='1';
+    }else{
+      status.style.color='#E84545';
+      status.textContent='❌ '+(d.error||'Transfer failed');
+      btn.textContent=ar?'نقل للتداول ←':'Transfer to Trading →';
+      btn.disabled=false;
+      btn.style.opacity='1';
+    }
+  }catch(e){
+    status.style.color='#E84545';
+    status.textContent='❌ '+(ar?'خطأ في الاتصال':'Connection error');
+    btn.textContent=ar?'نقل للتداول ←':'Transfer to Trading →';
+    btn.disabled=false;
+    btn.style.opacity='1';
+  }
 }
 
 // ── TOAST ─────────────────────────────────────────────
