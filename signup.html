@@ -481,9 +481,18 @@ function showDep(m){
   document.getElementById('tCrypto').classList.toggle('active',m==='crypto');
 }
 function onramp(name){
-  alert(lang==='ar'
-    ?`جاري فتح ${name}...\n\nسيُفتح نظام الدفع قريباً داخل نهار مباشرةً.`
-    :`Opening ${name}...\n\nThe payment widget will open inline inside Nahaar.`);
+  const user=JSON.parse(localStorage.getItem('nahaar_user')||'{}');
+  const addr=user.walletAddress||'';
+  let url='';
+  if(name==='MoonPay'){
+    url=`https://buy.moonpay.com/?currencyCode=usdc_arbitrum&walletAddress=${addr}&colorCode=%23D4AF37&language=${lang==='ar'?'ar':'en'}`;
+  } else if(name==='Transak'){
+    url=`https://global.transak.com/?cryptoCurrencyCode=USDC&network=arbitrum&walletAddress=${addr}&defaultFiatCurrency=${lang==='ar'?'AED':'USD'}&themeColor=D4AF37&hideMenu=true`;
+  } else {
+    url=`https://global.transak.com/?cryptoCurrencyCode=USDC&network=arbitrum&walletAddress=${addr}`;
+  }
+  const w=480,h=680,left=(window.screen.width-w)/2,top=(window.screen.height-h)/2;
+  window.open(url,'nahaar_deposit',`width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`);
 }
 function cpAddr(){
   const user=JSON.parse(localStorage.getItem('nahaar_user')||'{}');

@@ -450,10 +450,46 @@ html[dir=rtl] .toast{right:18px;}html[dir=ltr] .toast{left:18px;}
     </div>
     <hr class="dep-divider"/>
     <p style="font-size:11px;color:var(--muted2);margin-bottom:8px;" data-ar="أو اشترِ USDC مباشرة بعملتك المحلية:" data-en="Or buy USDC directly with local currency:">أو اشترِ USDC مباشرة بعملتك المحلية:</p>
-    <div class="onramp-grid">
-      <button class="onramp-btn" onclick="showToast('MoonPay '+(lang==='ar'?\'قريباً\':\'coming soon\'),'ok')">🌙 MoonPay</button>
-      <button class="onramp-btn" onclick="showToast('Transak '+(lang==='ar'?\'قريباً\':\'coming soon\'),'ok')">⚡ Transak</button>
-      <button class="onramp-btn" onclick="showToast('Alchemy '+(lang==='ar'?\'قريباً\':\'coming soon\'),'ok')">🔮 Alchemy</button>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="onramp-btn" onclick="openOnramp('moonpay')" style="padding:12px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">🌙</span>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">MoonPay</div>
+            <div style="font-size:10px;color:var(--muted2);" id="mpDesc">بطاقة · Apple Pay · تحويل بنكي</div>
+          </div>
+        </div>
+        <div style="text-align:left;">
+          <div style="font-size:11px;color:var(--green);font-family:var(--mono);">~3.5%</div>
+          <div style="font-size:10px;color:var(--muted2);" id="mpCountries">180+ دولة</div>
+        </div>
+      </button>
+      <button class="onramp-btn" onclick="openOnramp('transak')" style="padding:12px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">⚡</span>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Transak</div>
+            <div style="font-size:10px;color:var(--muted2);" id="tkDesc">بطاقة · P2P · تحويل محلي</div>
+          </div>
+        </div>
+        <div style="text-align:left;">
+          <div style="font-size:11px;color:var(--green);font-family:var(--mono);">~1%</div>
+          <div style="font-size:10px;color:var(--muted2);" id="tkCountries">162+ دولة</div>
+        </div>
+      </button>
+      <button class="onramp-btn" onclick="openOnramp('binance')" style="padding:12px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">🔶</span>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Binance Pay</div>
+            <div style="font-size:10px;color:var(--muted2);" id="bnDesc">تحويل من Binance مباشرة</div>
+          </div>
+        </div>
+        <div style="text-align:left;">
+          <div style="font-size:11px;color:var(--green);font-family:var(--mono);">مجاني</div>
+          <div style="font-size:10px;color:var(--muted2);" id="bnNetwork">Arbitrum</div>
+        </div>
+      </button>
     </div>
   </div>
 </div>
@@ -831,7 +867,48 @@ function openDeposit(){
   if(!userAddr){window.location.href='login.html';return;}
   document.getElementById('depAddrText').textContent=userAddr;
   document.getElementById('depModal').classList.add('open');
-  setLang(lang); // refresh translations
+  // Update onramp button labels for current language
+  const ar=lang==='ar';
+  const mpDesc=document.getElementById('mpDesc');
+  const mpCountries=document.getElementById('mpCountries');
+  const tkDesc=document.getElementById('tkDesc');
+  const tkCountries=document.getElementById('tkCountries');
+  const bnDesc=document.getElementById('bnDesc');
+  const bnNetwork=document.getElementById('bnNetwork');
+  if(mpDesc)mpDesc.textContent=ar?'بطاقة · Apple Pay · تحويل بنكي':'Card · Apple Pay · Bank transfer';
+  if(mpCountries)mpCountries.textContent=ar?'180+ دولة':'180+ countries';
+  if(tkDesc)tkDesc.textContent=ar?'بطاقة · P2P · تحويل محلي AED/SAR':'Card · P2P · Local AED/SAR';
+  if(tkCountries)tkCountries.textContent=ar?'162+ دولة':'162+ countries';
+  if(bnDesc)bnDesc.textContent=ar?'تحويل من Binance مباشرة':'Transfer directly from Binance';
+  if(bnNetwork)bnNetwork.textContent='Arbitrum';
+}
+
+function openOnramp(provider){
+  const addr=userAddr;
+  if(!addr){showToast(lang==='ar'?'يرجى تسجيل الدخول أولاً':'Please sign in first','err');return;}
+  let url='';
+  if(provider==='moonpay'){
+    // MoonPay - buy USDC on Arbitrum, send to user wallet
+    url=`https://buy.moonpay.com/?currencyCode=usdc_arbitrum&walletAddress=${addr}&colorCode=%23D4AF37&language=${lang==='ar'?'ar':'en'}`;
+  } else if(provider==='transak'){
+    // Transak - buy USDC on Arbitrum
+    url=`https://global.transak.com/?cryptoCurrencyCode=USDC&network=arbitrum&walletAddress=${addr}&defaultFiatCurrency=${lang==='ar'?'AED':'USD'}&themeColor=D4AF37&hideMenu=true`;
+  } else if(provider==='binance'){
+    // Binance Pay - manual instruction
+    showDepInstructions();
+    return;
+  }
+  // Open in centered popup window
+  const w=480,h=680;
+  const left=(window.screen.width-w)/2;
+  const top=(window.screen.height-h)/2;
+  window.open(url,'nahaar_deposit',`width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+}
+
+function showDepInstructions(){
+  const ar=lang==='ar';
+  const addr=userAddr;
+  showToast(ar?'انسخ عنوان محفظتك وأرسل USDC على شبكة Arbitrum من Binance':'Copy your wallet address and send USDC on Arbitrum network from Binance','ok');
 }
 function copyDepAddr(){
   navigator.clipboard.writeText(userAddr).catch(()=>{});
