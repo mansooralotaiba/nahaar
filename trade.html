@@ -997,6 +997,14 @@ async function placeO(){
   const sz=document.getElementById('sIn').value;
   const ar=lang==='ar';
   if(!sz||parseFloat(sz)<=0){showToast(ar?'يرجى إدخال حجم صحيح':'ENTER VALID SIZE','err');return;}
+  
+  // Check minimum $10 order value
+  const orderVal=(parseFloat(sz)||0)*(MK[sym]?.price||0);
+  if(orderVal<10){
+    const minSize=(10/(MK[sym]?.price||1));
+    showToast((ar?'الحد الأدنى للأمر $10 — الحجم الأدنى: ':'MIN ORDER $10 — MIN SIZE: ')+minSize.toFixed(4)+' '+sym,'err');
+    return;
+  }
 
   const price=MK[sym]?.price||0;
   const orderType=document.querySelector('.t-btn.on')?.getAttribute('data-en')||'LIMIT';
@@ -1132,6 +1140,9 @@ function selMkt(s){
   updMktBtn();renderStats();renderOB();
   document.getElementById('sUnit').textContent=s;
   document.getElementById('pIn').placeholder=fp(MK[s].price).replace('$','');
+  // Show minimum size based on $10 minimum order
+  const minSz=(10/(MK[s].price||1));
+  document.getElementById('sIn').placeholder='min '+(minSz<0.001?minSz.toFixed(6):minSz<1?minSz.toFixed(4):minSz.toFixed(2));
   const max=MK[s].maxLev||50;
   document.getElementById('levRange').max=max;
   if(lev>max)setLev(max);
