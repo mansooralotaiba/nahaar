@@ -879,24 +879,25 @@ function openOnramp(provider){
 
   if(provider==='moonpay'){
     const url=`https://buy.moonpay.com/?currencyCode=usdc_arbitrum&walletAddress=${encodeURIComponent(addr)}&colorCode=%23D4AF37&language=${lang==='ar'?'ar':'en'}`;
+    const ar=lang==='ar';
 
-    // Remove existing moonpay overlay if any
+    // Show a redirect screen overlay before opening new tab
     document.getElementById('mpOverlay')?.remove();
-
-    // Create full-screen iframe overlay
     const overlay=document.createElement('div');
     overlay.id='mpOverlay';
-    overlay.style.cssText='position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);';
-
+    overlay.style.cssText='position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);';
     overlay.innerHTML=`
-      <div style="position:relative;width:460px;max-width:95vw;height:680px;max-height:92vh;background:#0D0F14;border:1px solid rgba(212,175,55,0.2);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(212,175,55,0.1);flex-shrink:0;">
-          <span style="font-family:'DM Mono',monospace;font-size:12px;color:#D4AF37;">🌙 MoonPay</span>
-          <span onclick="document.getElementById('mpOverlay').remove()" style="color:#6B6550;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;">✕</span>
+      <div style="background:#0D0F14;border:1px solid rgba(212,175,55,0.25);border-radius:16px;padding:32px;width:420px;max-width:92vw;text-align:center;">
+        <div style="font-size:36px;margin-bottom:16px;">🌙</div>
+        <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;color:#F2EDD7;">${ar?'الانتقال إلى MoonPay':'Opening MoonPay'}</h3>
+        <p style="font-size:13px;color:#9D9478;margin-bottom:6px;">${ar?'ستنتقل إلى موقع MoonPay في تبويب جديد':'You will be taken to MoonPay in a new tab'}</p>
+        <p style="font-size:11px;color:#6B6550;margin-bottom:20px;font-family:monospace;">${ar?'عنوان محفظتك مضاف تلقائياً':'Your wallet address is pre-filled'}</p>
+        <div style="background:#07080A;border:1px solid rgba(212,175,55,0.15);border-radius:8px;padding:8px 12px;margin-bottom:20px;font-family:monospace;font-size:11px;color:#D4AF37;word-break:break-all;">${addr}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button onclick="document.getElementById('mpOverlay').remove()" style="padding:10px;background:transparent;border:1px solid rgba(212,175,55,0.2);border-radius:8px;color:#9D9478;font-family:inherit;font-size:13px;cursor:pointer;">${ar?'إلغاء':'Cancel'}</button>
+          <button onclick="window.open('${url}','_blank');document.getElementById('mpOverlay').remove();" style="padding:10px;background:linear-gradient(135deg,#D4AF37,#A8882A);color:#000;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;">${ar?'فتح MoonPay ←':'Open MoonPay →'}</button>
         </div>
-        <iframe src="${url}" style="flex:1;border:none;width:100%;" allow="accelerometer;autoplay;camera;gyroscope;payment" title="MoonPay"></iframe>
       </div>`;
-
     overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
     document.body.appendChild(overlay);
   }
