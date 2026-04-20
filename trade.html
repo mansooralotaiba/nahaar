@@ -1044,7 +1044,8 @@ PROCEED?`;
     const d=await r.json();
 
     if(d.success){
-      showToast(`✓ ${ar?'تم تنفيذ الأمر':'ORDER EXECUTED'}: ${side==='buy'?'LONG':'SHORT'} ${sz} ${sym} ${d.order.status==='filled'?'@ '+d.order.price:''}','ok');
+      const fillInfo=d.order?.status==='filled'?(' @ '+d.order.price):'';
+      showToast('✓ '+(ar?'تم تنفيذ الأمر':'ORDER EXECUTED')+': '+(side==='buy'?'LONG':'SHORT')+' '+sz+' '+sym+fillInfo,'ok');
       document.getElementById('sIn').value='';
       calcO();
       // Refresh balance after short delay
