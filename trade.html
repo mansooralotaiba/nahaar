@@ -464,19 +464,6 @@ html[dir=rtl] .toast{right:18px;}html[dir=ltr] .toast{left:18px;}
           <div style="font-size:10px;color:var(--muted2);" id="mpCountries">180+ دولة</div>
         </div>
       </button>
-      <button class="onramp-btn" onclick="openOnramp('transak')" style="padding:12px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:18px;">⚡</span>
-          <div style="text-align:right;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Transak</div>
-            <div style="font-size:10px;color:var(--muted2);" id="tkDesc">بطاقة · P2P · تحويل محلي</div>
-          </div>
-        </div>
-        <div style="text-align:left;">
-          <div style="font-size:11px;color:var(--green);font-family:var(--mono);">~1%</div>
-          <div style="font-size:10px;color:var(--muted2);" id="tkCountries">162+ دولة</div>
-        </div>
-      </button>
       <button class="onramp-btn" onclick="openOnramp('binance')" style="padding:12px;display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:18px;">🔶</span>
@@ -877,8 +864,6 @@ function openDeposit(){
   const bnNetwork=document.getElementById('bnNetwork');
   if(mpDesc)mpDesc.textContent=ar?'بطاقة · Apple Pay · تحويل بنكي':'Card · Apple Pay · Bank transfer';
   if(mpCountries)mpCountries.textContent=ar?'180+ دولة':'180+ countries';
-  if(tkDesc)tkDesc.textContent=ar?'بطاقة · P2P · تحويل محلي AED/SAR':'Card · P2P · Local AED/SAR';
-  if(tkCountries)tkCountries.textContent=ar?'162+ دولة':'162+ countries';
   if(bnDesc)bnDesc.textContent=ar?'تحويل من Binance مباشرة':'Transfer directly from Binance';
   if(bnNetwork)bnNetwork.textContent='Arbitrum';
 }
@@ -886,20 +871,35 @@ function openDeposit(){
 function openOnramp(provider){
   const addr=userAddr;
   if(!addr){showToast(lang==='ar'?'يرجى تسجيل الدخول أولاً':'Please sign in first','err');return;}
-  let url='';
-  if(provider==='moonpay'){
-    // MoonPay - buy USDC on Arbitrum, send to user wallet
-    url=`https://buy.moonpay.com/?currencyCode=usdc_arbitrum&walletAddress=${addr}&colorCode=%23D4AF37&language=${lang==='ar'?'ar':'en'}`;
-  } else if(provider==='transak'){
-    // Transak - buy USDC on Arbitrum
-    url=`https://global.transak.com/?cryptoCurrencyCode=USDC&network=arbitrum&walletAddress=${addr}&defaultFiatCurrency=${lang==='ar'?'AED':'USD'}&themeColor=D4AF37&hideMenu=true`;
-  } else if(provider==='binance'){
-    // Binance Pay - manual instruction
+
+  if(provider==='binance'){
     showDepInstructions();
     return;
   }
-  // Open in new tab - works without API key
-  window.open(url,'_blank');
+
+  if(provider==='moonpay'){
+    const url=`https://buy.moonpay.com/?currencyCode=usdc_arbitrum&walletAddress=${encodeURIComponent(addr)}&colorCode=%23D4AF37&language=${lang==='ar'?'ar':'en'}`;
+
+    // Remove existing moonpay overlay if any
+    document.getElementById('mpOverlay')?.remove();
+
+    // Create full-screen iframe overlay
+    const overlay=document.createElement('div');
+    overlay.id='mpOverlay';
+    overlay.style.cssText='position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);';
+
+    overlay.innerHTML=`
+      <div style="position:relative;width:460px;max-width:95vw;height:680px;max-height:92vh;background:#0D0F14;border:1px solid rgba(212,175,55,0.2);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(212,175,55,0.1);flex-shrink:0;">
+          <span style="font-family:'DM Mono',monospace;font-size:12px;color:#D4AF37;">🌙 MoonPay</span>
+          <span onclick="document.getElementById('mpOverlay').remove()" style="color:#6B6550;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;">✕</span>
+        </div>
+        <iframe src="${url}" style="flex:1;border:none;width:100%;" allow="accelerometer;autoplay;camera;gyroscope;payment" title="MoonPay"></iframe>
+      </div>`;
+
+    overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+    document.body.appendChild(overlay);
+  }
 }
 
 function showDepInstructions(){

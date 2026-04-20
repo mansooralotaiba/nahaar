@@ -268,18 +268,7 @@ html[dir=ltr] .div-or::before{left:0;}html[dir=ltr] .div-or::after{right:0;}
         </div>
       </div>
 
-      <div class="onramp">
-        <div class="onramp-h">
-          <div class="onramp-logo" style="background:rgba(29,158,117,0.15);">⚡</div>
-          <div><div class="onramp-nm">Transak</div><div class="onramp-st" data-ar="بطاقة · P2P · أكثر من 100 دولة" data-en="Card · P2P · 100+ countries">بطاقة · P2P · أكثر من 100 دولة</div></div>
-        </div>
-        <div class="onramp-b">
-          <div class="or-row"><span data-ar="الرسوم" data-en="Fee">الرسوم</span><span>~0.99%</span></div>
-          <div class="or-row"><span data-ar="العملات" data-en="Currencies">العملات</span><span>AED · SAR · KWD · EGP</span></div>
-          <div class="or-row"><span data-ar="الحد الأدنى" data-en="Minimum">الحد الأدنى</span><span>$10 USDC</span></div>
-          <button class="or-btn" onclick="onramp('Transak')" data-ar="شراء USDC عبر Transak" data-en="Buy USDC via Transak">شراء USDC عبر Transak</button>
-        </div>
-      </div>
+
 
       <div class="onramp">
         <div class="onramp-h">
@@ -483,15 +472,25 @@ function showDep(m){
 function onramp(name){
   const user=JSON.parse(localStorage.getItem('nahaar_user')||'{}');
   const addr=user.walletAddress||'';
-  let url='';
+  if(!addr){alert(lang==='ar'?'يرجى إكمال التسجيل أولاً':'Please complete signup first');return;}
+
   if(name==='MoonPay'){
-    url=`https://buy.moonpay.com/?currencyCode=usdc_arbitrum&walletAddress=${addr}&colorCode=%23D4AF37&language=${lang==='ar'?'ar':'en'}`;
-  } else if(name==='Transak'){
-    url=`https://global.transak.com/?cryptoCurrencyCode=USDC&network=arbitrum&walletAddress=${addr}&defaultFiatCurrency=${lang==='ar'?'AED':'USD'}&themeColor=D4AF37&hideMenu=true`;
-  } else {
-    url=`https://global.transak.com/?cryptoCurrencyCode=USDC&network=arbitrum&walletAddress=${addr}`;
+    const url=`https://buy.moonpay.com/?currencyCode=usdc_arbitrum&walletAddress=${encodeURIComponent(addr)}&colorCode=%23D4AF37&language=${lang==='ar'?'ar':'en'}`;
+    document.getElementById('mpOverlay2')?.remove();
+    const overlay=document.createElement('div');
+    overlay.id='mpOverlay2';
+    overlay.style.cssText='position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);';
+    overlay.innerHTML=`
+      <div style="position:relative;width:460px;max-width:95vw;height:680px;max-height:92vh;background:#0D0F14;border:1px solid rgba(212,175,55,0.2);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(212,175,55,0.1);flex-shrink:0;">
+          <span style="font-family:'DM Mono',monospace;font-size:12px;color:#D4AF37;">🌙 MoonPay</span>
+          <span onclick="document.getElementById('mpOverlay2').remove()" style="color:#6B6550;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;">✕</span>
+        </div>
+        <iframe src="${url}" style="flex:1;border:none;width:100%;" allow="accelerometer;autoplay;camera;gyroscope;payment" title="MoonPay"></iframe>
+      </div>`;
+    overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+    document.body.appendChild(overlay);
   }
-  window.open(url,'_blank');
 }
 function cpAddr(){
   const user=JSON.parse(localStorage.getItem('nahaar_user')||'{}');
