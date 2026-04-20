@@ -362,11 +362,12 @@ html[dir=rtl] .toast{right:18px;}html[dir=ltr] .toast{left:18px;}
       <div class="lev-row">
         <span class="lev-lbl" data-ar="الرافعة" data-en="Lev">الرافعة</span>
         <span class="lev-val" id="lLbl">5×</span>
-        <input type="range" min="1" max="50" value="5" step="1" id="levRange" oninput="setLev(this.value)"/>
+        <input type="range" min="1" max="100" value="5" step="1" id="levRange" oninput="setLev(this.value)"/>
         <div class="lev-btns">
           <div class="lev-btn" onclick="quickLev(5)">5×</div>
           <div class="lev-btn" onclick="quickLev(10)">10×</div>
-          <div class="lev-btn" onclick="quickLev(20)">20×</div>
+          <div class="lev-btn" onclick="quickLev(25)">25×</div>
+          <div class="lev-btn" onclick="quickLev(50)">50×</div>
         </div>
       </div>
 
@@ -415,11 +416,13 @@ html[dir=rtl] .toast{right:18px;}html[dir=ltr] .toast{left:18px;}
     </div>
     <div class="mkt-tabs-row">
       <div class="mkt-cat on" onclick="catFilter(this,'all')" data-ar="الكل" data-en="All">الكل</div>
+      <div class="mkt-cat" onclick="catFilter(this,'commodities')" data-ar="السلع 🥇" data-en="Commodities 🥇">السلع 🥇</div>
       <div class="mkt-cat" onclick="catFilter(this,'layer1')" data-ar="Layer 1" data-en="Layer 1">Layer 1</div>
       <div class="mkt-cat" onclick="catFilter(this,'defi')" data-ar="DeFi" data-en="DeFi">DeFi</div>
       <div class="mkt-cat" onclick="catFilter(this,'meme')" data-ar="Meme" data-en="Meme">Meme</div>
-      <div class="mkt-cat" onclick="catFilter(this,'gainers')" data-ar="الأعلى" data-en="Top Gainers">الأعلى</div>
-      <div class="mkt-cat" onclick="catFilter(this,'losers')" data-ar="الأدنى" data-en="Top Losers">الأدنى</div>
+      <div class="mkt-cat" onclick="catFilter(this,'equities')" data-ar="أسهم 📈" data-en="Equities 📈">أسهم 📈</div>
+      <div class="mkt-cat" onclick="catFilter(this,'gainers')" data-ar="الأعلى ▲" data-en="Top Gainers ▲">الأعلى ▲</div>
+      <div class="mkt-cat" onclick="catFilter(this,'losers')" data-ar="الأدنى ▼" data-en="Top Losers ▼">الأدنى ▼</div>
     </div>
     <div class="mkt-list" id="mktList"></div>
   </div>
@@ -657,7 +660,15 @@ function setType(el,tp){
   document.getElementById('pFld').style.display=tp==='market'?'none':'block';
   document.getElementById('tpslGrid').className='tpsl-grid'+(tp==='tpsl'?' show':'');
 }
-function setLev(v){lev=parseInt(v);document.getElementById('lLbl').textContent=v+'×';document.getElementById('levRange').value=v;calcO();}
+function setLev(v){
+  const maxLev=MK[sym]?.maxLev||50;
+  v=Math.min(parseInt(v),maxLev);
+  lev=v;
+  document.getElementById('lLbl').textContent=v+'×';
+  document.getElementById('levRange').value=v;
+  document.getElementById('levRange').max=maxLev;
+  calcO();
+}
 function quickLev(v){setLev(v);}
 function calcO(){
   const sz=parseFloat(document.getElementById('sIn').value)||0;
@@ -718,9 +729,11 @@ function catFilter(el,cat){
 }
 
 const CATS={
+  commodities:['@XAU','XAU','BRENTOIL','CL','USOIL','@XAG','XAG','@WTI','WTI'],
   layer1:['BTC','ETH','SOL','AVAX','NEAR','ATOM','FTM','ONE','ALGO','ADA','DOT','MATIC','ARB','OP','APT','SUI'],
   defi:['AAVE','UNI','SUSHI','CRV','SNX','COMP','MKR','YFI','BAL','1INCH','GMX','DYDX','PERP'],
   meme:['DOGE','SHIB','PEPE','FLOKI','BONK','WIF','MEME','TURBO','FARTCOIN','MOG','POPCAT'],
+  equities:['@TSLA','@NVDA','@AAPL','@MSFT','@AMZN','@GOOGL','@META','@NFLX','@COIN','XYZ100','SPX'],
 };
 
 function filterMkts(q){
@@ -728,7 +741,9 @@ function filterMkts(q){
   let filtered=allMkts;
   if(curCat==='gainers')filtered=[...allMkts].sort((a,b)=>b.chg-a.chg);
   else if(curCat==='losers')filtered=[...allMkts].sort((a,b)=>a.chg-b.chg);
-  else if(CATS[curCat])filtered=allMkts.filter(m=>CATS[curCat].includes(m.name));
+  else if(CATS[curCat])filtered=allMkts.filter(m=>
+    CATS[curCat].some(c=>m.name===c||m.name.includes(c.replace('@',''))||c.replace('@','')===m.name)
+  );
   if(q)filtered=filtered.filter(m=>m.name.toLowerCase().includes(q.toLowerCase()));
   filtered=filtered.slice(0,60);
   list.innerHTML=filtered.map(m=>`
@@ -746,6 +761,10 @@ function selMkt(s){
   updateMktSelBtn();renderTopStats();renderOB();
   document.getElementById('sUnit').textContent=s;
   document.getElementById('pIn').placeholder=fp(MK[s].price).replace('$','');
+  // Update leverage slider max for this asset
+  const maxLev=MK[s].maxLev||50;
+  document.getElementById('levRange').max=maxLev;
+  if(lev>maxLev){setLev(Math.min(lev,maxLev));}
   updPlBtn();calcO();
   buildChart();
 }
