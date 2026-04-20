@@ -948,10 +948,14 @@ function loadUser(){
     const short=userAddr.slice(0,6)+'...'+userAddr.slice(-4);
     addrEl.textContent=short;
     chip.style.display='flex';
-    // Fetch real balance
-    fetch(`${API}/api/account/positions`,{headers:{Authorization:'Bearer '+userToken}})
+    // Fetch real balance from DB
+    fetch(`${API}/api/account/balance`,{headers:{Authorization:'Bearer '+userToken}})
       .then(r=>r.json())
-      .then(d=>{if(d.balance)document.getElementById('balVal').textContent=parseFloat(d.balance).toFixed(2)+' USDC';})
+      .then(d=>{
+        if(d.success){
+          document.getElementById('balVal').textContent=parseFloat(d.tradingBalance).toFixed(2)+' USDC';
+        }
+      })
       .catch(()=>{});
     showTab(document.querySelector('.btab'),'pos');
   }else{
