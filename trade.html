@@ -1080,7 +1080,30 @@ function showTab(el,tab){
   const c=document.getElementById('bCont'),ar=lang==='ar';
   if(tab==='pos'){
     if(!wlt){c.innerHTML=`<div class="nopos">${ar?'▸ سجّل دخولك لعرض الصفقات المفتوحة':'▸ SIGN IN TO VIEW OPEN POSITIONS'}</div>`;return;}
-    c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد صفقات مفتوحة — ابدأ بتنفيذ أول أمر لك':'▸ NO OPEN POSITIONS — PLACE YOUR FIRST ORDER'}</div>`;
+    c.innerHTML=`<div class="nopos"><span class="blink">█</span> ${ar?'جارٍ التحميل...':'LOADING...'}</div>`;
+    fetch(`${API}/api/account/positions`,{headers:{Authorization:'Bearer '+userToken}})
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.positions&&d.positions.length>0){
+          const heads=ar?['السوق','الاتجاه','الحجم','الدخول','السعر الحالي','التصفية','ر/خ','إغلاق']:['MARKET','SIDE','SIZE','ENTRY','MARK','LIQ','PNL','CLOSE'];
+          c.innerHTML=`<table class="ptbl"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${
+            d.positions.map(p=>`<tr>
+              <td>${p.symbol}-USD</td>
+              <td><span class="pbadge ${p.side}">${p.side==='long'?(ar?'شراء':'LONG'):(ar?'بيع':'SHORT')}</span></td>
+              <td>${p.size} ${p.symbol}</td>
+              <td>${fp(p.entryPrice)}</td>
+              <td>${fp(p.markPrice||MK[p.symbol]?.price)}</td>
+              <td>${fp(p.liquidationPrice)}</td>
+              <td class="pnl ${parseFloat(p.unrealizedPnl)>=0?'up':'dn'}">${parseFloat(p.unrealizedPnl)>=0?'+':''}$${parseFloat(p.unrealizedPnl||0).toFixed(2)}</td>
+              <td><button class="cbtn" onclick="closePos('${p.symbol}','${p.side}','${p.size}')">${ar?'إغلاق':'CLOSE'}</button></td>
+            </tr>`).join('')
+          }</tbody></table>`;
+        }else{
+          c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد صفقات مفتوحة — ابدأ بتنفيذ أول أمر لك':'▸ NO OPEN POSITIONS — PLACE YOUR FIRST ORDER'}</div>`;
+        }
+      }).catch(()=>{
+        c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد صفقات مفتوحة':'▸ NO OPEN POSITIONS'}</div>`;
+      });
   }else if(tab==='ord'){
     c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد أوامر معلقة':'▸ NO OPEN ORDERS'}</div>`;
   }else if(tab==='his'){
@@ -1263,6 +1286,32 @@ function animateTicker(){
   const el=document.getElementById('feedTicker');
   if(el){el.textContent=msgs[tickerIdx%msgs.length];tickerIdx++;}
 }
+
+// ── CLOSE POSITION ───────────────────────────────────
+async function closePos(symbol, side, size){
+  const ar=lang==='ar';
+  const closeSide=side==='long'?'sell':'buy';
+  if(!confirm(ar?`إغلاق صفقة ${symbol}-USD؟`:`Close ${symbol}-USD position?`))return;
+  try{
+    const r=await fetch(`${API}/api/orders/place`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+userToken},
+      body:JSON.stringify({symbol,side:closeSide,orderType:'market',size:parseFloat(size),leverage:1,reduceOnly:true})
+    });
+    const d=await r.json();
+    if(d.success){
+      showToast((ar?'✓ تم إغلاق الصفقة':'✓ POSITION CLOSED')+': '+symbol,'ok');
+      setTimeout(()=>showTab(document.querySelector('.btab.on'),'pos'),1500);
+    }else{
+      showToast('❌ '+(d.error||'Failed'),'err');
+    }
+  }catch(e){showToast('❌ CONNECTION ERROR','err');}
+}
+
+// Auto-refresh positions every 10 seconds when tab is visible
+setInterval(()=>{
+  if(ct==='pos'&&wlt)showTab(document.querySelector('.btab.on'),'pos');
+},10000);
 
 // ── TOAST ─────────────────────────────────────────────
 function showToast(msg,type='ok'){
