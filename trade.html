@@ -642,7 +642,17 @@ async function buildChart(){
     borderUpColor:'#2ECC8A',borderDownColor:'#E84545',
     wickUpColor:'rgba(46,204,138,0.6)',wickDownColor:'rgba(232,69,69,0.6)',
   });
-  const vs=chart.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:'vol',scaleMargins:{top:0.84,bottom:0}});
+  const vs=chart.addHistogramSeries({
+    priceFormat:{type:'volume'},
+    priceScaleId:'vol',
+    scaleMargins:{top:0.85,bottom:0},
+    lastValueVisible:false,
+    priceLineVisible:false,
+  });
+  chart.priceScale('vol').applyOptions({
+    scaleMargins:{top:0.85,bottom:0},
+    visible:false,
+  });
 
   const tf=document.querySelector('.tf-row .ptab.active')?.textContent||'1h';
   document.getElementById('ohlcBar').innerHTML=`<span style="color:var(--muted)">${lang==='ar'?'جارٍ التحميل...':'Loading...'}</span>`;
