@@ -1360,10 +1360,16 @@ function animateTicker(){
 }
 
 // ── CLOSE POSITION ───────────────────────────────────
-async function closePos(symbol, side, size){
+async function closePos(posId, symbol, side, size){
   const ar=lang==='ar';
   const closeSide=side==='long'?'sell':'buy';
-  if(!confirm(ar?`إغلاق صفقة ${symbol}-USD؟`:`Close ${symbol}-USD position?`))return;
+  const pnlDisplay=document.querySelector(`button[onclick*="${posId}"]`)?.closest('tr')?.querySelector('.pnl')?.textContent||'';
+  if(!confirm(ar
+    ?`إغلاق صفقة ${symbol}-USD؟
+${pnlDisplay?'ر/خ المتوقع: '+pnlDisplay:''}`
+    :`Close ${symbol}-USD position?
+${pnlDisplay?'Est PNL: '+pnlDisplay:''}`
+  ))return;
   try{
     const r=await fetch(`${API}/api/orders/place`,{
       method:'POST',
@@ -1371,9 +1377,13 @@ async function closePos(symbol, side, size){
       body:JSON.stringify({symbol,side:closeSide,orderType:'market',size:parseFloat(size),leverage:1,reduceOnly:true})
     });
     const d=await r.json();
-    if(d.success){
-      showToast((ar?'✓ تم إغلاق الصفقة':'✓ POSITION CLOSED')+': '+symbol,'ok');
-      setTimeout(()=>showTab(document.querySelector('.btab.on'),'pos'),1500);
+    if(d.success&&d.filled){
+      const pnl=parseFloat(d.pnl||0);
+      showToast(`${pnl>=0?'✓ ربح':'✓ خسارة'} ${symbol}: ${pnl>=0?'+':''}$${pnl.toFixed(2)} | ${ar?'رصيد جديد':'New balance'}: $${d.newBalance}`,'ok');
+      setTimeout(()=>{
+        refreshPositionsSilent();
+        loadAccountSummary();
+      },1500);
     }else{
       showToast('❌ '+(d.error||'Failed'),'err');
     }
@@ -1437,16 +1447,20 @@ async function loadAccountSummary(){
 
     // Positions data
     if(posData.success){
-      let totalUnreal=0,totalMargin=0;
-      (posData.positions||[]).forEach(p=>{
-        totalUnreal+=parseFloat(p.unrealizedPnl||0);
-        totalMargin+=Math.abs(parseFloat(p.size||0))*(parseFloat(p.entryPrice||0)/(parseFloat(p.leverage||1)));
-      });
+      const totalUnreal=parseFloat(posData.unrealizedPnl||0);
+      const totalReal=parseFloat(posData.realizedPnl||0);
+      let totalMargin=0;
+      (posData.positions||[]).forEach(p=>{ totalMargin+=parseFloat(p.margin||0); });
 
       const upEl=document.getElementById('unrealPnl');
       if(upEl){
         upEl.textContent=(totalUnreal>=0?'+':'')+'$'+totalUnreal.toFixed(2);
         upEl.style.color=totalUnreal>0?'var(--green2)':totalUnreal<0?'var(--red2)':'var(--text3)';
+      }
+      const rpEl=document.getElementById('realPnl');
+      if(rpEl){
+        rpEl.textContent=(totalReal>=0?'+':'')+'$'+totalReal.toFixed(2);
+        rpEl.style.color=totalReal>0?'var(--green2)':totalReal<0?'var(--red2)':'var(--text3)';
       }
       const muEl=document.getElementById('marginUsed');
       if(muEl)muEl.textContent='$'+totalMargin.toFixed(2);
@@ -1457,8 +1471,6 @@ async function loadAccountSummary(){
         alEl.style.color=effLev>5?'var(--red2)':effLev>2?'var(--gold)':'var(--green2)';
       }
     }
-    const rpEl=document.getElementById('realPnl');
-    if(rpEl){rpEl.textContent='$0.00';rpEl.style.color='var(--text3)';}
 
   }catch(e){console.error('Account summary error:',e.message);}
 }
