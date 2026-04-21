@@ -603,11 +603,22 @@ html[dir=rtl] .toast{right:16px;}html[dir=ltr] .toast{left:16px;}
     </div>
     <div class="order-wrap">
 
+      <!-- Available balance -->
+      <div class="bal-row">
+        <span class="bal-lbl" data-ar="المتاح للتداول" data-en="AVAILABLE TO TRADE">المتاح للتداول</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="bal-amt" id="balVal">0.00 USDC</span>
+          <span class="bal-dep" onclick="openDeposit()" data-ar="+إيداع" data-en="+DEPOSIT">+إيداع</span>
+        </div>
+      </div>
+
+      <!-- Side toggle -->
       <div class="side-tog">
         <button class="s-btn buy on" id="bBtn" onclick="setSide('buy')" data-ar="شراء · LONG" data-en="LONG · BUY">شراء · LONG</button>
         <button class="s-btn sell" id="sBtn" onclick="setSide('sell')" data-ar="بيع · SHORT" data-en="SHORT · SELL">بيع · SHORT</button>
       </div>
 
+      <!-- Order type -->
       <div class="type-row">
         <button class="t-btn on" onclick="setType(this,'limit')" data-ar="محدود" data-en="LIMIT">محدود</button>
         <button class="t-btn" onclick="setType(this,'market')" data-ar="سوق" data-en="MARKET">سوق</button>
@@ -615,16 +626,37 @@ html[dir=rtl] .toast{right:16px;}html[dir=ltr] .toast{left:16px;}
         <button class="t-btn" onclick="setType(this,'tpsl')">TP/SL</button>
       </div>
 
+      <!-- Price -->
       <div class="fg" id="pFld">
         <div class="fg-lbl"><span data-ar="السعر" data-en="PRICE (USD)">السعر</span></div>
         <div class="frow"><input type="number" id="pIn" oninput="calcO()"/><div class="funit">USD</div></div>
       </div>
 
+      <!-- Size -->
       <div class="fg">
-        <div class="fg-lbl"><span data-ar="الحجم" data-en="SIZE">الحجم</span></div>
-        <div class="frow"><input type="number" id="sIn" placeholder="0.001" oninput="calcO()" step="0.001"/><div class="funit" id="sUnit">BTC</div></div>
+        <div class="fg-lbl">
+          <span data-ar="الحجم" data-en="SIZE">الحجم</span>
+          <span style="color:var(--text3);font-size:9px;" id="sizeUsdVal"></span>
+        </div>
+        <div class="frow"><input type="number" id="sIn" placeholder="0.00" oninput="onSizeInput()" step="0.001"/><div class="funit" id="sUnit">BTC</div></div>
       </div>
 
+      <!-- Size % slider -->
+      <div style="margin-bottom:8px;">
+        <div style="position:relative;margin-bottom:4px;">
+          <input type="range" min="0" max="100" value="0" id="szSlider" oninput="onSliderInput(this.value)" style="width:100%;accent-color:var(--gold);height:3px;cursor:pointer;"/>
+          <!-- Tick marks -->
+          <div style="display:flex;justify-content:space-between;padding:0 2px;margin-top:2px;">
+            <span onclick="onSliderInput(0);document.getElementById('szSlider').value=0" style="font-family:var(--mono);font-size:9px;color:var(--text3);cursor:pointer;">0%</span>
+            <span onclick="onSliderInput(25);document.getElementById('szSlider').value=25" style="font-family:var(--mono);font-size:9px;color:var(--text3);cursor:pointer;">25%</span>
+            <span onclick="onSliderInput(50);document.getElementById('szSlider').value=50" style="font-family:var(--mono);font-size:9px;color:var(--text3);cursor:pointer;">50%</span>
+            <span onclick="onSliderInput(75);document.getElementById('szSlider').value=75" style="font-family:var(--mono);font-size:9px;color:var(--text3);cursor:pointer;">75%</span>
+            <span onclick="onSliderInput(100);document.getElementById('szSlider').value=100" style="font-family:var(--mono);font-size:9px;color:var(--text3);cursor:pointer;">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TP/SL -->
       <div class="tpsl-grid" id="tpslGrid">
         <div class="fg" style="margin:0">
           <div class="fg-lbl"><span data-ar="إيقاف الربح" data-en="TAKE PROFIT">إيقاف الربح</span></div>
@@ -636,6 +668,13 @@ html[dir=rtl] .toast{right:16px;}html[dir=ltr] .toast{left:16px;}
         </div>
       </div>
 
+      <!-- Reduce only checkbox -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
+        <input type="checkbox" id="reduceOnlyChk" style="accent-color:var(--gold);cursor:pointer;"/>
+        <label for="reduceOnlyChk" style="font-family:var(--mono);font-size:10px;color:var(--text3);cursor:pointer;letter-spacing:0.04em;" data-ar="تقليص الصفقة فقط" data-en="Reduce Only">Reduce Only</label>
+      </div>
+
+      <!-- Leverage -->
       <div class="lev-wrap">
         <div class="lev-top">
           <span class="lev-lbl" data-ar="الرافعة" data-en="LEVERAGE">الرافعة</span>
@@ -650,23 +689,29 @@ html[dir=rtl] .toast{right:16px;}html[dir=ltr] .toast{left:16px;}
         <input type="range" min="1" max="100" value="5" id="levRange" oninput="setLev(this.value)"/>
       </div>
 
-      <div class="bal-row">
-        <span class="bal-lbl" data-ar="الرصيد" data-en="AVAILABLE">الرصيد</span>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span class="bal-amt" id="balVal">0.00 USDC</span>
-          <span class="bal-dep" onclick="openDeposit()" data-ar="+إيداع" data-en="+DEPOSIT">+إيداع</span>
-        </div>
-      </div>
-
+      <!-- Order summary -->
       <div class="osum">
         <div class="osr"><span data-ar="قيمة الأمر" data-en="ORDER VALUE">قيمة الأمر</span><span id="sVal">—</span></div>
         <div class="osr"><span data-ar="الهامش" data-en="MARGIN">الهامش</span><span id="sMgn">—</span></div>
-        <div class="osr"><span data-ar="سعر التصفية" data-en="LIQ. PRICE">سعر التصفية</span><span id="sLiq">—</span></div>
-        <div class="osr"><span data-ar="الرسوم 0.05%" data-en="FEE 0.05%">الرسوم 0.05%</span><span id="sFee">—</span></div>
+        <div class="osr"><span data-ar="سعر التصفية (تقديري)" data-en="LIQ. PRICE (EST)">سعر التصفية</span><span id="sLiq">—</span></div>
+        <div class="osr"><span data-ar="الرسوم 0.045%" data-en="FEE 0.045%">الرسوم 0.045%</span><span id="sFee">—</span></div>
+        <div class="osr"><span data-ar="الانزلاق (تقديري)" data-en="SLIPPAGE (EST)">الانزلاق</span><span id="slippageVal" style="color:var(--text3);">—</span></div>
       </div>
 
       <button class="place-btn buy" id="plBtn" onclick="placeO()">LONG BTC-USD</button>
       <div class="place-note" data-ar="لامركزي · آمن · ~400ms" data-en="DECENTRALISED · SECURE · ~400ms">لامركزي · آمن · ~400ms</div>
+
+      <!-- Account Summary -->
+      <div style="margin-top:10px;border-top:1px solid var(--line2);padding-top:8px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;" data-ar="ملخص الحساب" data-en="ACCOUNT SUMMARY">ملخص الحساب</div>
+        <div class="osum">
+          <div class="osr"><span data-ar="قيمة المحفظة" data-en="PORTFOLIO VALUE">قيمة المحفظة</span><span id="portfolioVal" style="color:var(--text);">—</span></div>
+          <div class="osr"><span data-ar="ر/خ غير محقق" data-en="UNREALIZED PNL">ر/خ غير محقق</span><span id="unrealPnl">—</span></div>
+          <div class="osr"><span data-ar="ر/خ محقق" data-en="REALIZED PNL">ر/خ محقق</span><span id="realPnl">—</span></div>
+          <div class="osr"><span data-ar="الهامش المستخدم" data-en="MARGIN USED">الهامش المستخدم</span><span id="marginUsed">—</span></div>
+          <div class="osr"><span data-ar="الرافعة الفعلية" data-en="ACCOUNT LEV">الرافعة الفعلية</span><span id="acctLev" style="color:var(--gold);">—</span></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -921,6 +966,31 @@ function renderOB(){
 }
 
 // ── ORDER ENTRY ───────────────────────────────────────
+// ── SIZE SLIDER ───────────────────────────────────────
+let currentBalance = 0;
+
+function onSizeInput(){
+  calcO();
+  // Update slider position based on size
+  const sz=parseFloat(document.getElementById('sIn').value)||0;
+  const price=MK[sym]?.price||0;
+  if(currentBalance>0&&price>0){
+    const pct=Math.min(100,Math.round((sz*price/lev)/currentBalance*100));
+    document.getElementById('szSlider').value=pct;
+  }
+}
+
+function onSliderInput(pct){
+  const price=MK[sym]?.price||0;
+  if(currentBalance<=0||price<=0)return;
+  // Calculate size from % of balance
+  const usdToUse=(currentBalance*pct/100)*lev;
+  const szDecimals=assetMetaCache?.[sym]?.szDecimals??3;
+  const sz=parseFloat((usdToUse/price).toFixed(szDecimals));
+  document.getElementById('sIn').value=sz>0?sz:'';
+  calcO();
+}
+
 function setSide(s){
   side=s;
   document.getElementById('bBtn').className='s-btn buy'+(s==='buy'?' on':'');
@@ -951,12 +1021,17 @@ function quickLev(v){setLev(v);}
 function calcO(){
   const sz=parseFloat(document.getElementById('sIn').value)||0;
   const p=MK[sym]?.price||0;
-  const val=sz*p,mg=val/lev,fee=val*0.0005;
+  const val=sz*p,mg=val/lev,fee=val*0.00045;
   const ld=mg/val||0,lp=side==='buy'?p*(1-ld):p*(1+ld);
+  const slippage=val>0?(p*0.0005).toFixed(2):'—';
   document.getElementById('sVal').textContent=val>0?'$'+val.toLocaleString('en-US',{maximumFractionDigits:2}):'—';
   document.getElementById('sMgn').textContent=mg>0?'$'+mg.toFixed(2):'—';
   document.getElementById('sLiq').textContent=val>0?fp(lp):'—';
   document.getElementById('sFee').textContent=fee>0?'$'+fee.toFixed(4):'—';
+  document.getElementById('slippageVal').textContent=val>0?'~$'+slippage:'—';
+  // Show USD value next to size input
+  const usdEl=document.getElementById('sizeUsdVal');
+  if(usdEl)usdEl.textContent=val>0?'≈ $'+val.toFixed(2):'';
 }
 async function placeO(){
   if(!wlt){window.location.href='login.html';return;}
@@ -1013,6 +1088,7 @@ PROCEED?`;
         size:parseFloat(sz),
         limitPrice:limitPrice?parseFloat(limitPrice):null,
         leverage:lev,
+        reduceOnly:document.getElementById('reduceOnlyChk')?.checked||false,
       })
     });
     const d=await r.json();
@@ -1221,8 +1297,15 @@ function loadUser(){
     tag.style.display='flex';
     fetch(`${API}/api/account/balance`,{headers:{Authorization:'Bearer '+userToken}})
       .then(r=>r.json())
-      .then(d=>{if(d.success)document.getElementById('balVal').textContent=parseFloat(d.tradingBalance).toFixed(2)+' USDC';})
-      .catch(()=>{});
+      .then(d=>{
+        if(d.success){
+          const bal=parseFloat(d.tradingBalance);
+          currentBalance=bal;
+          document.getElementById('balVal').textContent=bal.toFixed(2)+' USDC';
+        }
+      }).catch(()=>{});
+    // Load full account summary from Hyperliquid
+    loadAccountSummary();
     showTab(document.querySelector('.btab.on'),'pos');
   }else{
     tag.style.display='none';
@@ -1278,6 +1361,52 @@ async function closePos(symbol, side, size){
 setInterval(()=>{
   if(ct==='pos'&&wlt)showTab(document.querySelector('.btab.on'),'pos');
 },10000);
+
+// ── ACCOUNT SUMMARY ──────────────────────────────────
+async function loadAccountSummary(){
+  try{
+    const r=await fetch(`${API}/api/account/positions`,{headers:{Authorization:'Bearer '+userToken}});
+    const d=await r.json();
+    if(!d.success)return;
+
+    // Portfolio value
+    const portEl=document.getElementById('portfolioVal');
+    if(portEl)portEl.textContent='$'+parseFloat(d.balance||0).toFixed(2);
+
+    // Update available balance
+    currentBalance=parseFloat(d.balance||0);
+    document.getElementById('balVal').textContent=currentBalance.toFixed(2)+' USDC';
+
+    // Unrealized PNL from positions
+    let totalUnreal=0,totalMargin=0;
+    (d.positions||[]).forEach(p=>{
+      totalUnreal+=parseFloat(p.unrealizedPnl||0);
+      totalMargin+=Math.abs(parseFloat(p.size||0))*(parseFloat(p.entryPrice||0)/parseFloat(p.leverage||1));
+    });
+
+    const upEl=document.getElementById('unrealPnl');
+    if(upEl){
+      upEl.textContent=(totalUnreal>=0?'+':'')+'$'+totalUnreal.toFixed(2);
+      upEl.style.color=totalUnreal>=0?'var(--green2)':'var(--red2)';
+    }
+
+    const rpEl=document.getElementById('realPnl');
+    if(rpEl){rpEl.textContent='$0.00';rpEl.style.color='var(--text3)';}
+
+    const muEl=document.getElementById('marginUsed');
+    if(muEl)muEl.textContent=totalMargin>0?'$'+totalMargin.toFixed(2):'$0.00';
+
+    const alEl=document.getElementById('acctLev');
+    if(alEl){
+      const effLev=currentBalance>0?(totalMargin/currentBalance):0;
+      alEl.textContent=effLev.toFixed(2)+'×';
+    }
+
+  }catch(e){}
+}
+
+// Refresh account summary every 15 seconds
+setInterval(()=>{if(wlt)loadAccountSummary();},15000);
 
 // ── TOAST ─────────────────────────────────────────────
 function showToast(msg,type='ok'){
