@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>نهار — Terminal</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+
 <style>
 :root{
   --bg:#020304;
@@ -560,21 +560,22 @@ html[dir=rtl] .toast{right:16px;}html[dir=ltr] .toast{left:16px;}
   <div class="panel">
     <div class="phdr">
       <span class="plbl" id="chartSymLbl">BTC-USD PERP</span>
-      <div class="ml tf-row">
-        <button class="tf-btn" onclick="setTF(this,'5m')">5M</button>
-        <button class="tf-btn on" onclick="setTF(this,'1h')">1H</button>
-        <button class="tf-btn" onclick="setTF(this,'4h')">4H</button>
-        <button class="tf-btn" onclick="setTF(this,'1D')">1D</button>
-        <button class="tf-btn" onclick="setTF(this,'1W')">1W</button>
+      <div class="ml" style="display:flex;align-items:center;gap:6px;">
+        <div class="status-dot"></div>
+        <span class="status-txt" id="feedStatus">LIVE · TRADINGVIEW</span>
       </div>
     </div>
-    <div class="status-row">
-      <div class="status-dot"></div>
-      <span class="status-txt" id="feedStatus">LIVE · HYPERLIQUID L1</span>
-      <span class="status-txt" style="margin-right:auto;margin-left:auto;" id="ohlcBar"></span>
-    </div>
-    <div class="chart-wrap">
-      <div id="cDiv"></div>
+    <div class="chart-wrap" style="position:relative;">
+      <div class="tradingview-widget-container" style="width:100%;height:100%;">
+        <iframe
+          id="tvChart"
+          src="https://www.tradingview.com/widgetembed/?frameElementId=tvChart&symbol=BINANCE%3ABTCUSDT&interval=60&hidesidetoolbar=0&hidetoptoolbar=0&symboledit=0&saveimage=1&toolbarbg=020304&studies=[]&theme=dark&style=1&timezone=exchange&withdateranges=1&showpopupbutton=0&studies_overrides=%7B%7D&overrides=%7B%22mainSeriesProperties.candleStyle.upColor%22%3A%22%2328A060%22%2C%22mainSeriesProperties.candleStyle.downColor%22%3A%22%23D64040%22%2C%22mainSeriesProperties.candleStyle.borderUpColor%22%3A%22%2328A060%22%2C%22mainSeriesProperties.candleStyle.borderDownColor%22%3A%22%23D64040%22%2C%22mainSeriesProperties.candleStyle.wickUpColor%22%3A%22%2328A060%22%2C%22mainSeriesProperties.candleStyle.wickDownColor%22%3A%22%23D64040%22%2C%22paneProperties.background%22%3A%22%23020304%22%2C%22paneProperties.backgroundType%22%3A%22solid%22%2C%22scalesProperties.textColor%22%3A%22%23607080%22%7D&enabled_features=[]&disabled_features=[%22use_localstorage_for_settings%22]&locale=en&utm_source=nahaar.ai&utm_medium=widget&utm_campaign=chart"
+          style="width:100%;height:100%;border:none;"
+          allowtransparency="true"
+          scrolling="no"
+          allowfullscreen>
+        </iframe>
+      </div>
     </div>
   </div>
 
@@ -864,81 +865,46 @@ async function fetchPrices(){
     const mids=await r.json();
     Object.entries(mids).forEach(([s,p])=>{if(MK[s])MK[s].price=parseFloat(p);});
     updMktBtn();renderStats();
-    if(cs&&MK[sym]){
-      const price=MK[sym].price;
-      const tf=document.querySelector('.tf-btn.on')?.textContent||'1H';
-      const secs={['5M']:300,['1H']:3600,['4H']:14400,['1D']:86400,['1W']:604800}[tf]||3600;
-      const now=Math.floor(Date.now()/1000);
-      const ct2=Math.floor(now/secs)*secs;
-      try{cs.update({time:ct2,open:price,high:price,low:price,close:price});}catch(e){}
-    }
+    // TradingView handles live price updates
   }catch(e){}
 }
 
-// ── CHART ─────────────────────────────────────────────
-function tfInterval(tf){return{['5M']:'5m',['1H']:'1h',['4H']:'4h',['1D']:'1d',['1W']:'1d'}[tf]||'1h';}
-
-async function buildChart(){
-  const el=document.getElementById('cDiv');
-  if(chart){try{chart.remove();}catch(e){}chart=null;}
-  chart=LightweightCharts.createChart(el,{
-    width:el.clientWidth,height:el.clientHeight,
-    layout:{background:{type:'solid',color:'#020304'},textColor:'#607080'},
-    grid:{vertLines:{color:'rgba(26,32,40,0.8)'},horzLines:{color:'rgba(26,32,40,0.8)'}},
-    crosshair:{mode:LightweightCharts.CrosshairMode.Normal,
-      vertLine:{color:'rgba(200,168,75,0.3)',width:1,style:3},
-      horzLine:{color:'rgba(200,168,75,0.3)',width:1,style:3}},
-    rightPriceScale:{borderColor:'#1a2028',textColor:'#607080'},
-    timeScale:{borderColor:'#1a2028',textColor:'#607080',timeVisible:true},
-  });
-  cs=chart.addCandlestickSeries({
-    upColor:'#28A060',downColor:'#D64040',
-    borderUpColor:'#28A060',borderDownColor:'#D64040',
-    wickUpColor:'rgba(40,160,96,0.7)',wickDownColor:'rgba(214,64,64,0.7)',
-  });
-  const vs=chart.addHistogramSeries({
-    priceFormat:{type:'volume'},priceScaleId:'vol',
-    scaleMargins:{top:0.85,bottom:0},
-    lastValueVisible:false,priceLineVisible:false,
-  });
-  chart.priceScale('vol').applyOptions({scaleMargins:{top:0.85,bottom:0},visible:false});
-
-  const tf=document.querySelector('.tf-btn.on')?.textContent||'1H';
-  document.getElementById('ohlcBar').innerHTML='<span class="blink">█</span> LOADING...';
-
-  try{
-    const r=await fetch(`${API}/api/markets/candles/${sym}?interval=${tfInterval(tf)}&limit=200`);
-    const d=await r.json();
-    if(d.candles&&d.candles.length>0){
-      const seen=new Set();
-      const cands=d.candles.map(c=>({time:Math.floor(c.t/1000),open:parseFloat(c.o),high:parseFloat(c.h),low:parseFloat(c.l),close:parseFloat(c.c)}))
-        .filter(c=>c.time>0&&c.open>0).sort((a,b)=>a.time-b.time)
-        .filter(c=>{if(seen.has(c.time))return false;seen.add(c.time);return true;});
-      const seen2=new Set();
-      const vols=d.candles.map(c=>({time:Math.floor(c.t/1000),value:parseFloat(c.v)||0,color:parseFloat(c.c)>=parseFloat(c.o)?'rgba(40,160,96,0.4)':'rgba(214,64,64,0.4)'}))
-        .filter(c=>c.time>0).sort((a,b)=>a.time-b.time)
-        .filter(c=>{if(seen2.has(c.time))return false;seen2.add(c.time);return true;});
-      cs.setData(cands);vs.setData(vols);
-      document.getElementById('ohlcBar').innerHTML='';
-    }else throw new Error('no data');
-  }catch(e){
-    // Fallback
-    let t=Math.floor(Date.now()/1000)-200*3600,c=(MK[sym]?.price||50000)*0.92;
-    const fb=[],fv=[];
-    for(let i=0;i<200;i++){const o=c,mv=(Math.random()-0.48)*c*0.015;c=Math.max(c*0.5,c+mv);const hi=Math.max(o,c)*(1+Math.random()*0.005),lo=Math.min(o,c)*(1-Math.random()*0.005);fb.push({time:t,open:+o.toFixed(2),high:+hi.toFixed(2),low:+lo.toFixed(2),close:+c.toFixed(2)});fv.push({time:t,value:Math.random()*300+50,color:c>=o?'rgba(40,160,96,0.4)':'rgba(214,64,64,0.4)'});t+=3600;}
-    cs.setData(fb);vs.setData(fv);
-    document.getElementById('ohlcBar').innerHTML='DEMO DATA';
-  }
-
-  chart.subscribeCrosshairMove(p=>{
-    if(p.time&&cs){const d=p.seriesData?.get(cs);if(d){const up=d.close>=d.open;document.getElementById('ohlcBar').innerHTML=`<span>O</span><b class="${up?'up':'dn'}">${fp(d.open)}</b><span>H</span><b class="${up?'up':'dn'}">${fp(d.high)}</b><span>L</span><b class="${up?'up':'dn'}">${fp(d.low)}</b><span>C</span><b class="${up?'up':'dn'}">${fp(d.close)}</b>`;}}
-  });
-
-  const ro=new ResizeObserver(()=>{if(chart)chart.applyOptions({width:el.clientWidth,height:el.clientHeight});});
-  ro.observe(el);
+// ── CHART — TRADINGVIEW ───────────────────────────────
+// Map Hyperliquid symbol to TradingView symbol
+function tvSymbol(s){
+  const map={
+    'BTC':'BINANCE:BTCUSDT','ETH':'BINANCE:ETHUSDT','SOL':'BINANCE:SOLUSDT',
+    'XRP':'BINANCE:XRPUSDT','DOGE':'BINANCE:DOGEUSDT','AVAX':'BINANCE:AVAXUSDT',
+    'ARB':'BINANCE:ARBUSDT','OP':'BINANCE:OPUSDT','LINK':'BINANCE:LINKUSDT',
+    'AAVE':'BINANCE:AAVEUSDT','UNI':'BINANCE:UNIUSDT','PEPE':'BINANCE:PEPEUSDT',
+    'WIF':'BINANCE:WIFUSDT','BONK':'BINANCE:BONKUSDT','HYPE':'BINANCE:HYPEUSDT',
+    'XAU':'TVC:GOLD','BRENTOIL':'TVC:UKOIL','CL':'TVC:USOIL','XAG':'TVC:SILVER',
+  };
+  return map[s]||`BINANCE:${s}USDT`;
 }
 
-function setTF(el,tf){document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');buildChart();}
+function buildChart(){
+  const iframe=document.getElementById('tvChart');
+  if(!iframe)return;
+  const tvsym=encodeURIComponent(tvSymbol(sym));
+  const overrides=encodeURIComponent(JSON.stringify({
+    "mainSeriesProperties.candleStyle.upColor":"#28A060",
+    "mainSeriesProperties.candleStyle.downColor":"#D64040",
+    "mainSeriesProperties.candleStyle.borderUpColor":"#28A060",
+    "mainSeriesProperties.candleStyle.borderDownColor":"#D64040",
+    "mainSeriesProperties.candleStyle.wickUpColor":"#28A060",
+    "mainSeriesProperties.candleStyle.wickDownColor":"#D64040",
+    "paneProperties.background":"#020304",
+    "paneProperties.backgroundType":"solid",
+    "scalesProperties.textColor":"#607080",
+    "scalesProperties.lineColor":"#1a2028",
+  }));
+  iframe.src=`https://www.tradingview.com/widgetembed/?frameElementId=tvChart&symbol=${tvsym}&interval=60&hidesidetoolbar=0&hidetoptoolbar=0&symboledit=0&saveimage=1&toolbarbg=020304&theme=dark&style=1&timezone=exchange&withdateranges=1&showpopupbutton=0&overrides=${overrides}&enabled_features=[]&disabled_features=%5B%22use_localstorage_for_settings%22%5D&locale=${lang==='ar'?'ar':'en'}&utm_source=nahaar.ai&utm_medium=widget`;
+  document.getElementById('chartSymLbl').textContent=sym+'-USD PERP';
+  document.getElementById('feedStatus').textContent='LIVE · TRADINGVIEW';
+}
+
+function setTF(el,tf){buildChart();} // TradingView manages its own timeframes
 
 // ── ORDER BOOK ────────────────────────────────────────
 function renderOB(){
