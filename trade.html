@@ -982,9 +982,20 @@ function onSizeInput(){
 
 function onSliderInput(pct){
   const price=MK[sym]?.price||0;
-  if(currentBalance<=0||price<=0)return;
-  // Calculate size from % of balance
-  const usdToUse=(currentBalance*pct/100)*lev;
+  if(price<=0)return;
+  // Get balance from display if currentBalance is 0
+  let bal=currentBalance;
+  if(bal<=0){
+    const balTxt=document.getElementById('balVal')?.textContent||'0';
+    bal=parseFloat(balTxt)||0;
+  }
+  if(bal<=0||pct<=0){
+    document.getElementById('sIn').value='';
+    calcO();
+    return;
+  }
+  // Calculate size from % of balance with leverage
+  const usdToUse=(bal*pct/100)*lev;
   const szDecimals=assetMetaCache?.[sym]?.szDecimals??3;
   const sz=parseFloat((usdToUse/price).toFixed(szDecimals));
   document.getElementById('sIn').value=sz>0?sz:'';
