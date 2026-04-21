@@ -193,14 +193,14 @@ html[dir=ltr] .tf-btn{border-left:none;border-right:1px solid var(--line);}
 .tf-btn.on{color:var(--gold);background:var(--gold-dim2);}
 
 /* ── ORDER BOOK ── */
-.ob-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;justify-content:stretch;}
+.ob-wrap{flex:1;display:grid;grid-template-rows:1fr 20px 1fr;overflow:hidden;min-height:0;}
 .ob-hdr{
   display:grid;grid-template-columns:1fr 1fr 1fr;
   padding:2px 8px;border-bottom:1px solid var(--line);
   font-family:var(--mono);font-size:9px;color:var(--text3);
   letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;
 }
-.ob-rows{flex:1;overflow-y:auto;display:flex;flex-direction:column;justify-content:flex-end;}
+.ob-rows{flex:1;overflow-y:hidden;display:flex;flex-direction:column;}
 .ob-rows::-webkit-scrollbar{width:2px;}
 .ob-rows::-webkit-scrollbar-thumb{background:var(--line2);}
 .ob-row{
@@ -1365,47 +1365,57 @@ setInterval(()=>{
 // ── ACCOUNT SUMMARY ──────────────────────────────────
 async function loadAccountSummary(){
   try{
-    const r=await fetch(`${API}/api/account/positions`,{headers:{Authorization:'Bearer '+userToken}});
-    const d=await r.json();
-    if(!d.success)return;
+    // Fetch both balance and positions in parallel
+    const [balRes, posRes] = await Promise.all([
+      fetch(`${API}/api/account/balance`,{headers:{Authorization:'Bearer '+userToken}}),
+      fetch(`${API}/api/account/positions`,{headers:{Authorization:'Bearer '+userToken}})
+    ]);
+    const balData = await balRes.json();
+    const posData = await posRes.json();
 
-    // Portfolio value
-    const portEl=document.getElementById('portfolioVal');
-    if(portEl)portEl.textContent='$'+parseFloat(d.balance||0).toFixed(2);
-
-    // Update available balance
-    const newBal=parseFloat(d.balance||0);
-    if(newBal>0){
-      currentBalance=newBal;
-      document.getElementById('balVal').textContent=currentBalance.toFixed(2)+' USDC';
+    // Update trading balance
+    if(balData.success){
+      const bal=parseFloat(balData.tradingBalance||0);
+      if(bal>0){
+        currentBalance=bal;
+        document.getElementById('balVal').textContent=currentBalance.toFixed(2)+' USDC';
+      }
+      // Portfolio value = trading balance + unrealized PNL
+      let totalUnreal=0;
+      (posData.positions||[]).forEach(p=>{
+        totalUnreal+=parseFloat(p.unrealizedPnl||0);
+      });
+      const portfolioVal=currentBalance+totalUnreal;
+      const portEl=document.getElementById('portfolioVal');
+      if(portEl)portEl.textContent='$'+portfolioVal.toFixed(2);
     }
 
-    // Unrealized PNL from positions
-    let totalUnreal=0,totalMargin=0;
-    (d.positions||[]).forEach(p=>{
-      totalUnreal+=parseFloat(p.unrealizedPnl||0);
-      totalMargin+=Math.abs(parseFloat(p.size||0))*(parseFloat(p.entryPrice||0)/parseFloat(p.leverage||1));
-    });
+    // Positions data
+    if(posData.success){
+      let totalUnreal=0,totalMargin=0;
+      (posData.positions||[]).forEach(p=>{
+        totalUnreal+=parseFloat(p.unrealizedPnl||0);
+        totalMargin+=Math.abs(parseFloat(p.size||0))*(parseFloat(p.entryPrice||0)/(parseFloat(p.leverage||1)));
+      });
 
-    const upEl=document.getElementById('unrealPnl');
-    if(upEl){
-      upEl.textContent=(totalUnreal>=0?'+':'')+'$'+totalUnreal.toFixed(2);
-      upEl.style.color=totalUnreal>=0?'var(--green2)':'var(--red2)';
+      const upEl=document.getElementById('unrealPnl');
+      if(upEl){
+        upEl.textContent=(totalUnreal>=0?'+':'')+'$'+totalUnreal.toFixed(2);
+        upEl.style.color=totalUnreal>0?'var(--green2)':totalUnreal<0?'var(--red2)':'var(--text3)';
+      }
+      const muEl=document.getElementById('marginUsed');
+      if(muEl)muEl.textContent='$'+totalMargin.toFixed(2);
+      const alEl=document.getElementById('acctLev');
+      if(alEl){
+        const effLev=currentBalance>0?(totalMargin/currentBalance):0;
+        alEl.textContent=effLev.toFixed(2)+'×';
+        alEl.style.color=effLev>5?'var(--red2)':effLev>2?'var(--gold)':'var(--green2)';
+      }
     }
-
     const rpEl=document.getElementById('realPnl');
     if(rpEl){rpEl.textContent='$0.00';rpEl.style.color='var(--text3)';}
 
-    const muEl=document.getElementById('marginUsed');
-    if(muEl)muEl.textContent=totalMargin>0?'$'+totalMargin.toFixed(2):'$0.00';
-
-    const alEl=document.getElementById('acctLev');
-    if(alEl){
-      const effLev=currentBalance>0?(totalMargin/currentBalance):0;
-      alEl.textContent=effLev.toFixed(2)+'×';
-    }
-
-  }catch(e){}
+  }catch(e){console.error('Account summary error:',e.message);}
 }
 
 // Refresh account summary every 15 seconds
