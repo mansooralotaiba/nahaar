@@ -193,14 +193,14 @@ html[dir=ltr] .tf-btn{border-left:none;border-right:1px solid var(--line);}
 .tf-btn.on{color:var(--gold);background:var(--gold-dim2);}
 
 /* ── ORDER BOOK ── */
-.ob-wrap{flex:1;display:grid;grid-template-rows:1fr 20px 1fr;overflow:hidden;min-height:0;}
+.ob-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
 .ob-hdr{
   display:grid;grid-template-columns:1fr 1fr 1fr;
   padding:2px 8px;border-bottom:1px solid var(--line);
   font-family:var(--mono);font-size:9px;color:var(--text3);
   letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;
 }
-.ob-rows{flex:1;overflow-y:hidden;display:flex;flex-direction:column;}
+.ob-rows{flex:1;overflow-y:hidden;display:flex;flex-direction:column;min-height:0;}
 .ob-rows::-webkit-scrollbar{width:2px;}
 .ob-rows::-webkit-scrollbar-thumb{background:var(--line2);}
 .ob-row{
@@ -590,7 +590,7 @@ html[dir=rtl] .toast{right:16px;}html[dir=ltr] .toast{left:16px;}
         <span data-ar="الحجم" data-en="SIZE">الحجم</span>
         <span data-ar="المجموع" data-en="TOTAL">المجموع</span>
       </div>
-      <div class="ob-rows" id="askRows"></div>
+      <div class="ob-rows" id="askRows" style="justify-content:flex-end;"></div>
       <div class="ob-spread" id="spreadInfo">— SPREAD —</div>
       <div class="ob-rows" id="bidRows"></div>
     </div>
@@ -1122,10 +1122,14 @@ function showTab(el,tab){
   const c=document.getElementById('bCont'),ar=lang==='ar';
   if(tab==='pos'){
     if(!wlt){c.innerHTML=`<div class="nopos">${ar?'▸ سجّل دخولك لعرض الصفقات المفتوحة':'▸ SIGN IN TO VIEW OPEN POSITIONS'}</div>`;return;}
-    c.innerHTML=`<div class="nopos"><span class="blink">█</span> ${ar?'جارٍ التحميل...':'LOADING...'}</div>`;
+    // Show loading only if container is empty
+    if(!c.innerHTML.trim()||c.innerHTML.includes('LOADING'))
+      c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد صفقات مفتوحة — ابدأ بتنفيذ أول أمر لك':'▸ NO OPEN POSITIONS — PLACE YOUR FIRST ORDER'}</div>`;
+    // Fetch in background, update silently
     fetch(`${API}/api/account/positions`,{headers:{Authorization:'Bearer '+userToken}})
       .then(r=>r.json())
       .then(d=>{
+        if(ct!=='pos')return; // Don't update if user switched tab
         if(d.positions&&d.positions.length>0){
           const heads=ar?['السوق','الاتجاه','الحجم','الدخول','السعر الحالي','التصفية','ر/خ','إغلاق']:['MARKET','SIDE','SIZE','ENTRY','MARK','LIQ','PNL','CLOSE'];
           c.innerHTML=`<table class="ptbl"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${
@@ -1140,12 +1144,10 @@ function showTab(el,tab){
               <td><button class="cbtn" onclick="closePos('${p.symbol}','${p.side}','${p.size}')">${ar?'إغلاق':'CLOSE'}</button></td>
             </tr>`).join('')
           }</tbody></table>`;
-        }else{
+        }else if(!c.querySelector('table')){
           c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد صفقات مفتوحة — ابدأ بتنفيذ أول أمر لك':'▸ NO OPEN POSITIONS — PLACE YOUR FIRST ORDER'}</div>`;
         }
-      }).catch(()=>{
-        c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد صفقات مفتوحة':'▸ NO OPEN POSITIONS'}</div>`;
-      });
+      }).catch(()=>{});
   }else if(tab==='ord'){
     c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد أوامر معلقة':'▸ NO OPEN ORDERS'}</div>`;
   }else if(tab==='his'){
@@ -1357,10 +1359,32 @@ async function closePos(symbol, side, size){
   }catch(e){showToast('❌ CONNECTION ERROR','err');}
 }
 
-// Auto-refresh positions every 10 seconds when tab is visible
-setInterval(()=>{
-  if(ct==='pos'&&wlt)showTab(document.querySelector('.btab.on'),'pos');
-},10000);
+// Auto-refresh positions silently every 10 seconds
+async function refreshPositionsSilent(){
+  if(ct!=='pos'||!wlt)return;
+  const c=document.getElementById('bCont');
+  const ar=lang==='ar';
+  try{
+    const d=await fetch(`${API}/api/account/positions`,{headers:{Authorization:'Bearer '+userToken}}).then(r=>r.json());
+    if(ct!=='pos')return;
+    if(d.positions&&d.positions.length>0){
+      const heads=ar?['السوق','الاتجاه','الحجم','الدخول','السعر الحالي','التصفية','ر/خ','إغلاق']:['MARKET','SIDE','SIZE','ENTRY','MARK','LIQ','PNL','CLOSE'];
+      c.innerHTML=`<table class="ptbl"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${
+        d.positions.map(p=>`<tr>
+          <td>${p.symbol}-USD</td>
+          <td><span class="pbadge ${p.side}">${p.side==='long'?(ar?'شراء':'LONG'):(ar?'بيع':'SHORT')}</span></td>
+          <td>${p.size} ${p.symbol}</td>
+          <td>${fp(p.entryPrice)}</td>
+          <td>${fp(p.markPrice||MK[p.symbol]?.price)}</td>
+          <td>${fp(p.liquidationPrice)}</td>
+          <td class="pnl ${parseFloat(p.unrealizedPnl)>=0?'up':'dn'}">${parseFloat(p.unrealizedPnl)>=0?'+':''}$${parseFloat(p.unrealizedPnl||0).toFixed(2)}</td>
+          <td><button class="cbtn" onclick="closePos('${p.symbol}','${p.side}','${p.size}')">${ar?'إغلاق':'CLOSE'}</button></td>
+        </tr>`).join('')
+      }</tbody></table>`;
+    }
+  }catch(e){}
+}
+setInterval(refreshPositionsSilent, 10000);
 
 // ── ACCOUNT SUMMARY ──────────────────────────────────
 async function loadAccountSummary(){
