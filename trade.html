@@ -193,33 +193,33 @@ html[dir=ltr] .tf-btn{border-left:none;border-right:1px solid var(--line);}
 .tf-btn.on{color:var(--gold);background:var(--gold-dim2);}
 
 /* ── ORDER BOOK ── */
-.ob-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+.ob-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;justify-content:stretch;}
 .ob-hdr{
   display:grid;grid-template-columns:1fr 1fr 1fr;
-  padding:3px 8px;border-bottom:1px solid var(--line);
+  padding:2px 8px;border-bottom:1px solid var(--line);
   font-family:var(--mono);font-size:9px;color:var(--text3);
   letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;
 }
-.ob-rows{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.ob-rows{flex:1;overflow-y:auto;display:flex;flex-direction:column;justify-content:flex-end;}
 .ob-rows::-webkit-scrollbar{width:2px;}
 .ob-rows::-webkit-scrollbar-thumb{background:var(--line2);}
 .ob-row{
   display:grid;grid-template-columns:1fr 1fr 1fr;
-  padding:1px 8px;position:relative;cursor:pointer;
-  transition:background 0.08s;
+  padding:0px 8px;position:relative;cursor:pointer;
+  transition:background 0.08s;line-height:1.4;
 }
 .ob-row:hover{background:rgba(255,255,255,0.02);}
 .ob-bar{position:absolute;top:0;height:100%;opacity:0.08;}
 html[dir=rtl] .ob-bar{right:0;}html[dir=ltr] .ob-bar{left:0;}
 .ob-bar.a{background:var(--red);}
 .ob-bar.b{background:var(--green);}
-.ob-p{font-family:var(--mono);font-size:10px;}
+.ob-p{font-family:var(--mono);font-size:10px;letter-spacing:-0.02em;}
 .ob-p.a{color:var(--red2);}
 .ob-p.b{color:var(--green2);}
-.ob-s,.ob-t{font-family:var(--mono);font-size:10px;color:var(--text3);}
+.ob-s,.ob-t{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:-0.01em;}
 html[dir=rtl] .ob-t{text-align:left;}html[dir=ltr] .ob-t{text-align:right;}
 .ob-spread{
-  padding:4px 8px;text-align:center;
+  padding:2px 8px;text-align:center;
   font-family:var(--mono);font-size:10px;color:var(--gold);
   background:var(--gold-dim);border-top:1px solid var(--line);
   border-bottom:1px solid var(--line);flex-shrink:0;
@@ -954,10 +954,10 @@ function setTF(el,tf){buildChart();} // TradingView manages its own timeframes
 // ── ORDER BOOK ────────────────────────────────────────
 function renderOB(){
   const bp=MK[sym]?.price||50000,asks=[],bids=[];
-  for(let i=0;i<12;i++){
-    const off=(i+1)*(bp*0.0001+Math.random()*bp*0.0002);
-    asks.unshift({p:bp+off,s:+(Math.random()*2+0.05).toFixed(3),t:+(Math.random()*8+0.5).toFixed(2)});
-    bids.push({p:bp-off,s:+(Math.random()*2+0.05).toFixed(3),t:+(Math.random()*8+0.5).toFixed(2)});
+  for(let i=0;i<18;i++){
+    const off=(i+1)*(bp*0.00008+Math.random()*bp*0.00015);
+    asks.unshift({p:bp+off,s:+(Math.random()*3+0.05).toFixed(3),t:+(Math.random()*12+0.5).toFixed(2)});
+    bids.push({p:bp-off,s:+(Math.random()*3+0.05).toFixed(3),t:+(Math.random()*12+0.5).toFixed(2)});
   }
   const sp=asks[asks.length-1].p-bids[0].p,mx=10;
   document.getElementById('spreadInfo').textContent=`${fp(sp).replace('$','')} · ${(sp/bp*100).toFixed(4)}%`;
@@ -1304,8 +1304,8 @@ function loadUser(){
           document.getElementById('balVal').textContent=bal.toFixed(2)+' USDC';
         }
       }).catch(()=>{});
-    // Load full account summary from Hyperliquid
-    loadAccountSummary();
+    // Load full account summary from Hyperliquid (after token is set)
+    setTimeout(loadAccountSummary, 500);
     showTab(document.querySelector('.btab.on'),'pos');
   }else{
     tag.style.display='none';
@@ -1374,8 +1374,11 @@ async function loadAccountSummary(){
     if(portEl)portEl.textContent='$'+parseFloat(d.balance||0).toFixed(2);
 
     // Update available balance
-    currentBalance=parseFloat(d.balance||0);
-    document.getElementById('balVal').textContent=currentBalance.toFixed(2)+' USDC';
+    const newBal=parseFloat(d.balance||0);
+    if(newBal>0){
+      currentBalance=newBal;
+      document.getElementById('balVal').textContent=currentBalance.toFixed(2)+' USDC';
+    }
 
     // Unrealized PNL from positions
     let totalUnreal=0,totalMargin=0;
