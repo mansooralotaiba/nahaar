@@ -267,6 +267,7 @@ html[dir=rtl] .toast{right:16px;}html[dir=ltr] .toast{left:16px;}
     <button class="tbtn" onclick="openWithdraw()" data-ar="سحب" data-en="WITHDRAW">سحب</button>
     <a href="copytrade.html" class="tbtn" data-ar="نسخ" data-en="COPY">نسخ</a>
     <a href="wallets.html" class="tbtn" data-ar="حيتان" data-en="WHALES">حيتان</a>
+    <a href="admin.html" id="adminLink" class="tbtn" style="display:none;color:var(--gold);" data-ar="⚙" data-en="⚙">⚙</a>
     <button class="tbtn red" onclick="doLogout()" data-ar="خروج" data-en="EXIT">خروج</button>
   </div>
 </div>
@@ -816,7 +817,9 @@ async function placeO(){
 
 // ── POSITIONS / ORDERS TAB ────────────────────────────
 async function refreshPositions(){
-  if(!wlt||ct!=='pos')return;
+  if(ct!=='pos')return;
+  if(!userToken)userToken=localStorage.getItem('nahaar_token')||'';
+  if(!userToken)return;
   const c=document.getElementById('bCont');
   const ar=lang==='ar';
   try{
@@ -855,7 +858,9 @@ async function refreshPositions(){
 }
 
 async function refreshOrders(){
-  if(!wlt||ct!=='ord')return;
+  if(ct!=='ord')return;
+  if(!userToken)userToken=localStorage.getItem('nahaar_token')||'';
+  if(!userToken)return;
   const c=document.getElementById('bCont');
   const ar=lang==='ar';
   try{
@@ -891,14 +896,16 @@ function showTab(el,tab){
   if(el)el.classList.add('on');
   const c=document.getElementById('bCont');
   const ar=lang==='ar';
+  // Check localStorage directly to avoid async race conditions
+  const isLoggedIn=wlt||(!!localStorage.getItem('nahaar_token')&&!!localStorage.getItem('nahaar_user'));
   if(tab==='pos'){
-    if(!wlt)return void(c.innerHTML=`<div class="nopos">${ar?'▸ سجّل دخولك':'▸ SIGN IN'}</div>`);
+    if(!isLoggedIn)return void(c.innerHTML=`<div class="nopos">${ar?'▸ سجّل دخولك':'▸ SIGN IN'}</div>`);
     refreshPositions();
   }else if(tab==='ord'){
-    if(!wlt)return void(c.innerHTML=`<div class="nopos">${ar?'▸ سجّل دخولك':'▸ SIGN IN'}</div>`);
+    if(!isLoggedIn)return void(c.innerHTML=`<div class="nopos">${ar?'▸ سجّل دخولك':'▸ SIGN IN'}</div>`);
     refreshOrders();
   }else if(tab==='his'){
-    if(!wlt)return void(c.innerHTML=`<div class="nopos">${ar?'▸ سجّل دخولك':'▸ SIGN IN'}</div>`);
+    if(!isLoggedIn)return void(c.innerHTML=`<div class="nopos">${ar?'▸ سجّل دخولك':'▸ SIGN IN'}</div>`);
     fetch(`${API}/api/orders/history`,{headers:{Authorization:'Bearer '+userToken}})
       .then(r=>r.json()).then(d=>{
         if(ct!=='his')return;
@@ -950,7 +957,8 @@ async function cancelOrder(symbol,oid){
 
 // ── ACCOUNT SUMMARY ──────────────────────────────────
 async function loadAccountSummary(){
-  if(!wlt)return;
+  if(!userToken)userToken=localStorage.getItem('nahaar_token')||'';
+  if(!userToken)return;
   try{
     const [balRes,posRes]=await Promise.all([
       fetch(`${API}/api/account/balance`,{headers:{Authorization:'Bearer '+userToken}}),
@@ -1104,6 +1112,12 @@ async function loadUser(){
     wlt=true;userAddr=user.walletAddress;
     addrEl.textContent=userAddr.slice(0,6)+'...'+userAddr.slice(-4);
     tag.style.display='flex';
+    // Check if admin
+    try{
+      const rr=await fetch(`${API}/api/admin/check`,{headers:{Authorization:'Bearer '+userToken}});
+      const dd=await rr.json();
+      if(dd.isAdmin)document.getElementById('adminLink').style.display='flex';
+    }catch(e){}
     await loadAccountSummary();
     showTab(document.querySelector('.btab.on'),'pos');
   }else{

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Nahaar Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#020304;--bg1:#060809;--bg2:#0a0d0f;--bg3:#0f1318;
+  --line:#1a2028;--line2:#243040;
+  --gold:#C8A84B;--gold2:#E8C870;--gold-dim:rgba(200,168,75,0.07);--gold-dim2:rgba(200,168,75,0.12);
+  --red:#D64040;--red2:#FF5555;--green:#28A060;--green2:#35CC7A;
+  --red-dim:rgba(214,64,64,0.08);--green-dim:rgba(40,160,96,0.08);
+  --text:#D8D0C0;--text2:#A09880;--text3:#607080;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh;}
+.top{height:44px;background:var(--bg1);border-bottom:1px solid var(--line2);display:flex;align-items:center;padding:0 16px;gap:16px;}
+.logo{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--gold);letter-spacing:0.15em;}
+.title{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;}
+.top-right{margin-left:auto;display:flex;gap:8px;}
+.tbtn{padding:6px 12px;background:transparent;border:1px solid var(--line2);color:var(--text3);font-family:var(--mono);font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;letter-spacing:0.05em;}
+.tbtn:hover{border-color:var(--gold);color:var(--gold);}
+.tbtn.red:hover{border-color:var(--red);color:var(--red2);}
+
+.container{padding:16px;max-width:1600px;margin:0 auto;}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px;}
+.stat{background:var(--bg1);border:1px solid var(--line2);padding:14px 16px;}
+.stat-lbl{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--gold);}
+.stat-val.green{color:var(--green2);}
+.stat-val.blue{color:#6AB7FF;}
+
+.tabs{display:flex;border-bottom:1px solid var(--line2);margin-bottom:12px;}
+.tab{padding:10px 18px;font-family:var(--mono);font-size:11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:0.08em;text-transform:uppercase;}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold);}
+.tab:hover:not(.on){color:var(--text2);}
+
+.panel{background:var(--bg1);border:1px solid var(--line2);padding:14px;margin-bottom:14px;}
+.panel-title{font-family:var(--mono);font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;}
+th{background:var(--bg2);color:var(--text3);padding:8px 10px;text-align:left;font-weight:500;text-transform:uppercase;letter-spacing:0.06em;font-size:10px;border-bottom:1px solid var(--line2);}
+td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--text2);}
+tr:hover td{background:var(--gold-dim);}
+.addr{font-size:10px;color:var(--text3);}
+
+.badge{display:inline-block;padding:1px 7px;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;}
+.badge.long{color:var(--green2);background:var(--green-dim);border:1px solid var(--green);}
+.badge.short{color:var(--red2);background:var(--red-dim);border:1px solid var(--red);}
+.badge.verified{color:var(--green2);background:var(--green-dim);}
+.badge.unverified{color:var(--red2);background:var(--red-dim);}
+.badge.pending{color:var(--gold);background:var(--gold-dim);}
+.badge.credited{color:var(--green2);background:var(--green-dim);}
+.badge.swept{color:#6AB7FF;background:rgba(106,183,255,0.08);}
+
+.pnl.up{color:var(--green2);}.pnl.dn{color:var(--red2);}
+
+.btn{padding:4px 10px;background:transparent;border:1px solid var(--line2);color:var(--text3);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:0.05em;}
+.btn:hover{border-color:var(--gold);color:var(--gold);}
+.btn.red:hover{border-color:var(--red);color:var(--red2);}
+.btn.green:hover{border-color:var(--green);color:var(--green2);}
+
+input[type=number],input[type=text]{background:var(--bg);border:1px solid var(--line2);color:var(--text);font-family:var(--mono);font-size:11px;padding:5px 8px;outline:none;}
+input:focus{border-color:var(--gold);}
+
+.empty{text-align:center;padding:30px;color:var(--text3);font-family:var(--mono);font-size:11px;}
+.loading{text-align:center;padding:30px;color:var(--text3);font-family:var(--mono);font-size:11px;}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--gold);padding:10px 16px;font-family:var(--mono);font-size:11px;color:var(--gold);opacity:0;transition:opacity 0.3s;z-index:100;}
+.toast.show{opacity:1;}
+.toast.err{border-color:var(--red);color:var(--red2);}
+
+.rev-chart{display:flex;gap:4px;align-items:flex-end;height:120px;padding:8px 0;}
+.rev-bar{flex:1;background:var(--gold-dim2);border-top:2px solid var(--gold);min-height:2px;position:relative;}
+.rev-bar:hover{background:var(--gold-dim);}
+.rev-bar-lbl{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:8px;color:var(--text3);}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="logo">نهار</div>
+  <div class="title">⚙ ADMIN CONTROL PANEL</div>
+  <div class="top-right">
+    <a href="trade.html" class="tbtn">← Back to Terminal</a>
+    <button class="tbtn red" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="stats" id="statsGrid">
+    <div class="stat"><div class="stat-lbl">Total Users</div><div class="stat-val" id="statUsers">—</div></div>
+    <div class="stat"><div class="stat-lbl">Verified</div><div class="stat-val green" id="statVerified">—</div></div>
+    <div class="stat"><div class="stat-lbl">Open Positions</div><div class="stat-val blue" id="statPositions">—</div></div>
+    <div class="stat"><div class="stat-lbl">Total Balance</div><div class="stat-val green" id="statBalance">—</div></div>
+    <div class="stat"><div class="stat-lbl">Revenue (all time)</div><div class="stat-val" id="statRevenue">—</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" onclick="showTab(this,'users')">Users</div>
+    <div class="tab" onclick="showTab(this,'positions')">Positions</div>
+    <div class="tab" onclick="showTab(this,'deposits')">Deposits</div>
+    <div class="tab" onclick="showTab(this,'revenue')">Revenue</div>
+  </div>
+
+  <div id="tabContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API='https://nahaar-backend-nahaar.up.railway.app';
+const token=localStorage.getItem('nahaar_token');
+if(!token){window.location.href='login.html';}
+
+async function apiGet(path){
+  const r=await fetch(API+path,{headers:{Authorization:'Bearer '+token}});
+  return await r.json();
+}
+async function apiPost(path,body){
+  const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body)});
+  return await r.json();
+}
+function toast(msg,err){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show'+(err?' err':'');
+  setTimeout(()=>t.className='toast',3000);
+}
+function logout(){localStorage.clear();window.location.href='index.html';}
+function fmt(n){return parseFloat(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function shortAddr(a){return a?a.slice(0,6)+'...'+a.slice(-4):'—';}
+function shortTx(t){return t?t.slice(0,8)+'...'+t.slice(-6):'—';}
+
+// Check admin access
+async function verify(){
+  try{
+    const d=await apiGet('/api/admin/check');
+    if(!d.isAdmin){alert('Admin access required');window.location.href='trade.html';return false;}
+    return true;
+  }catch(e){window.location.href='login.html';return false;}
+}
+
+async function loadStats(){
+  try{
+    const d=await apiGet('/api/admin/stats');
+    if(d.success){
+      document.getElementById('statUsers').textContent=d.stats.totalUsers;
+      document.getElementById('statVerified').textContent=d.stats.verifiedUsers;
+      document.getElementById('statPositions').textContent=d.stats.openPositions;
+      document.getElementById('statBalance').textContent='$'+fmt(d.stats.totalBalance);
+      document.getElementById('statRevenue').textContent='$'+fmt(d.stats.totalRevenue);
+    }
+  }catch(e){}
+}
+
+function showTab(el,tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  if(tab==='users')renderUsers();
+  else if(tab==='positions')renderPositions();
+  else if(tab==='deposits')renderDeposits();
+  else if(tab==='revenue')renderRevenue();
+}
+
+async function renderUsers(){
+  const c=document.getElementById('tabContent');
+  c.innerHTML='<div class="panel"><div class="panel-title">▸ USERS</div><div class="loading">Loading...</div></div>';
+  const d=await apiGet('/api/admin/users');
+  if(!d.success){c.innerHTML='<div class="panel"><div class="empty">Error loading users</div></div>';return;}
+  c.innerHTML=`<div class="panel">
+    <div class="panel-title">▸ USERS (${d.users.length})</div>
+    <table>
+      <thead><tr>
+        <th>Email</th><th>Wallet</th><th>Balance</th><th>Realized PnL</th>
+        <th>Pending Dep.</th><th>Positions</th><th>Status</th><th>Joined</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${d.users.map(u=>`
+        <tr>
+          <td style="color:var(--text)">${u.email}</td>
+          <td class="addr">${shortAddr(u.walletAddress)}</td>
+          <td style="color:var(--green2)">$${fmt(u.balance)}</td>
+          <td class="pnl ${parseFloat(u.realizedPnl)>=0?'up':'dn'}">${parseFloat(u.realizedPnl)>=0?'+':''}$${fmt(u.realizedPnl)}</td>
+          <td>${parseFloat(u.pendingDeposit)>0?'$'+fmt(u.pendingDeposit):'—'}</td>
+          <td>${u.openPositions}</td>
+          <td><span class="badge ${u.verified?'verified':'unverified'}">${u.verified?'✓ Verified':'× Unverified'}</span></td>
+          <td class="addr">${new Date(u.createdAt).toLocaleDateString()}</td>
+          <td>
+            <button class="btn" onclick="editBalance('${u.id}','${u.email}',${u.balance})">Edit Balance</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+async function editBalance(userId,email,currentBal){
+  const newBal=prompt(`Edit balance for ${email}\nCurrent: $${currentBal}\n\nEnter new balance (USDC):`,currentBal);
+  if(newBal===null||isNaN(parseFloat(newBal)))return;
+  const reason=prompt('Reason for this change (for audit log):','Manual adjustment');
+  if(reason===null)return;
+  const d=await apiPost('/api/admin/update-balance',{userId,newBalance:parseFloat(newBal),reason});
+  if(d.success){
+    toast(`✓ Balance updated to $${newBal}`);
+    renderUsers();loadStats();
+  }else toast('Error: '+(d.error||'Failed'),true);
+}
+
+async function renderPositions(){
+  const c=document.getElementById('tabContent');
+  c.innerHTML='<div class="panel"><div class="panel-title">▸ OPEN POSITIONS</div><div class="loading">Loading...</div></div>';
+  const d=await apiGet('/api/admin/positions');
+  if(!d.success){c.innerHTML='<div class="panel"><div class="empty">Error loading positions</div></div>';return;}
+  if(!d.positions.length){c.innerHTML='<div class="panel"><div class="panel-title">▸ OPEN POSITIONS</div><div class="empty">No open positions</div></div>';return;}
+  c.innerHTML=`<div class="panel">
+    <div class="panel-title">▸ OPEN POSITIONS (${d.positions.length})</div>
+    <table>
+      <thead><tr>
+        <th>User</th><th>Symbol</th><th>Side</th><th>Size</th><th>Entry</th>
+        <th>Mark</th><th>Liq</th><th>TP/SL</th><th>PnL</th><th>Margin</th><th>Lev</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${d.positions.map(p=>`
+        <tr>
+          <td style="color:var(--text)">${p.email||'—'}</td>
+          <td style="font-weight:600">${p.symbol}-USD</td>
+          <td><span class="badge ${p.side}">${p.side.toUpperCase()}</span></td>
+          <td>${parseFloat(p.size).toFixed(4)}</td>
+          <td>$${parseFloat(p.entryPrice).toFixed(4)}</td>
+          <td>$${parseFloat(p.markPrice).toFixed(4)}</td>
+          <td style="color:var(--red2)">$${parseFloat(p.liquidationPrice||0).toFixed(4)}</td>
+          <td>${p.tpPrice?'<span style="color:var(--green2)">TP:'+parseFloat(p.tpPrice).toFixed(2)+'</span>':''}${p.tpPrice&&p.slPrice?' / ':''}${p.slPrice?'<span style="color:var(--red2)">SL:'+parseFloat(p.slPrice).toFixed(2)+'</span>':''}${!p.tpPrice&&!p.slPrice?'—':''}</td>
+          <td class="pnl ${parseFloat(p.unrealizedPnl)>=0?'up':'dn'}">${parseFloat(p.unrealizedPnl)>=0?'+':''}$${p.unrealizedPnl}</td>
+          <td>$${parseFloat(p.margin).toFixed(2)}</td>
+          <td>${p.leverage}×</td>
+          <td><button class="btn red" onclick="forceClose('${p.id}','${p.symbol}')">Force Close</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+async function forceClose(positionId,symbol){
+  if(!confirm(`Force close ${symbol} position? This will execute a market close on Hyperliquid.`))return;
+  const d=await apiPost('/api/admin/force-close',{positionId});
+  if(d.success){toast('✓ Position closed');renderPositions();loadStats();}
+  else toast('Error: '+(d.error||'Failed'),true);
+}
+
+async function renderDeposits(){
+  const c=document.getElementById('tabContent');
+  c.innerHTML='<div class="panel"><div class="panel-title">▸ DEPOSITS</div><div class="loading">Loading...</div></div>';
+  const d=await apiGet('/api/admin/deposits');
+  if(!d.success){c.innerHTML='<div class="panel"><div class="empty">Error loading</div></div>';return;}
+  if(!d.deposits.length){c.innerHTML='<div class="panel"><div class="panel-title">▸ DEPOSITS</div><div class="empty">No deposits yet</div></div>';return;}
+  c.innerHTML=`<div class="panel">
+    <div class="panel-title">▸ DEPOSITS (${d.deposits.length})</div>
+    <table>
+      <thead><tr>
+        <th>User</th><th>Amount</th><th>Wallet</th><th>TX Hash</th><th>Status</th><th>Date</th>
+      </tr></thead>
+      <tbody>${d.deposits.map(dp=>`
+        <tr>
+          <td style="color:var(--text)">${dp.email||'—'}</td>
+          <td style="color:var(--green2)">$${fmt(dp.amount)} USDC</td>
+          <td class="addr">${shortAddr(dp.walletAddress)}</td>
+          <td class="addr"><a href="https://arbiscan.io/tx/${dp.txHash}" target="_blank" style="color:var(--gold);text-decoration:none;">${shortTx(dp.txHash)}</a></td>
+          <td><span class="badge ${dp.status}">${dp.status.toUpperCase()}</span></td>
+          <td class="addr">${new Date(dp.createdAt).toLocaleString()}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+async function renderRevenue(){
+  const c=document.getElementById('tabContent');
+  c.innerHTML='<div class="panel"><div class="panel-title">▸ REVENUE</div><div class="loading">Loading...</div></div>';
+  const d=await apiGet('/api/admin/revenue');
+  if(!d.success){c.innerHTML='<div class="panel"><div class="empty">Error</div></div>';return;}
+
+  const byDay=d.revenue.byDay||{};
+  const days=Object.keys(byDay).sort().slice(-14);
+  const max=Math.max(...days.map(day=>byDay[day]),0.01);
+
+  c.innerHTML=`
+    <div class="panel">
+      <div class="panel-title">▸ REVENUE CONFIG</div>
+      <table style="width:auto">
+        <tr><td style="color:var(--text3)">Spread</td><td style="color:var(--gold);font-weight:600">${d.config.spreadPct} per trade (open + close)</td></tr>
+        <tr><td style="color:var(--text3)">Builder Fee</td><td style="color:var(--gold);font-weight:600">${d.config.builderFeeBps} (disabled by default)</td></tr>
+      </table>
+    </div>
+
+    <div class="stats" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat"><div class="stat-lbl">Spread Revenue</div><div class="stat-val green">$${fmt(d.revenue.spread)}</div></div>
+      <div class="stat"><div class="stat-lbl">Builder Fee</div><div class="stat-val">$${fmt(d.revenue.builderFee)}</div></div>
+      <div class="stat"><div class="stat-lbl">Total Revenue</div><div class="stat-val" style="color:var(--gold2)">$${fmt(d.revenue.total)}</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">▸ LAST 14 DAYS</div>
+      ${days.length?`
+        <div class="rev-chart">
+          ${days.map(day=>{
+            const amt=byDay[day];
+            const h=Math.max(2,(amt/max)*110);
+            return `<div class="rev-bar" style="height:${h}px;" title="${day}: $${fmt(amt)}"><div class="rev-bar-lbl">${day.slice(5)}</div></div>`;
+          }).join('')}
+        </div>
+        <div style="height:30px;"></div>
+      `:'<div class="empty">No revenue data yet</div>'}
+    </div>
+  `;
+}
+
+async function init(){
+  if(!(await verify()))return;
+  await loadStats();
+  await renderUsers();
+  // Auto-refresh stats every 30s
+  setInterval(loadStats,30000);
+}
+init();
+</script>
+</body>
+</html>
