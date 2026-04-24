@@ -817,44 +817,64 @@ async function placeO(){
 
 // ── POSITIONS / ORDERS TAB ────────────────────────────
 async function refreshPositions(){
-  if(ct!=='pos')return;
-  if(!userToken)userToken=localStorage.getItem('nahaar_token')||'';
-  if(!userToken)return;
-  const c=document.getElementById('bCont');
-  const ar=lang==='ar';
-  try{
-    const r=await fetch(`${API}/api/account/positions`,{headers:{Authorization:'Bearer '+userToken}});
-    const d=await r.json();
-    if(ct!=='pos')return;
+  const token = localStorage.getItem('nahaar_token');
+  if(!token) return;
+  const c = document.getElementById('bCont');
+  if(!c) return;
+  if(ct !== 'pos') return;
+  const ar = lang === 'ar';
 
-    const cntEl=document.getElementById('posCnt');
-    if(d.positions?.length>0){
-      cntEl.style.display='inline';cntEl.textContent=d.positions.length;
-      const heads=ar?['السوق','الاتجاه','الحجم','الدخول','الحالي','التصفية','TP','SL','ر/خ','الهامش','إغلاق']:['MARKET','SIDE','SIZE','ENTRY','MARK','LIQ','TP','SL','PNL','MARGIN','CLOSE'];
-      c.innerHTML=`<table class="ptbl"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${
-        d.positions.map(p=>{
-          const pnl=parseFloat(p.unrealizedPnl||0);
-          const mark=p.markPrice||MK[p.symbol]?.price||p.entryPrice;
-          return `<tr>
-            <td style="font-weight:600">${p.symbol}-USD</td>
-            <td><span class="pbadge ${p.side}">${p.side==='long'?(ar?'شراء':'LONG'):(ar?'بيع':'SHORT')}</span></td>
-            <td>${p.size}</td>
-            <td>${fp(p.entryPrice)}</td>
-            <td>${fp(mark)}</td>
-            <td style="color:var(--red2)">${fp(p.liquidationPrice)}</td>
-            <td style="color:${p.tpPrice?'var(--green2)':'var(--text3)'}">${p.tpPrice?fp(p.tpPrice):'—'}</td>
-            <td style="color:${p.slPrice?'var(--red2)':'var(--text3)'}">${p.slPrice?fp(p.slPrice):'—'}</td>
-            <td class="pnl ${pnl>=0?'up':'dn'}">${pnl>=0?'+':''}$${pnl.toFixed(2)}</td>
-            <td>$${parseFloat(p.margin||0).toFixed(2)}</td>
-            <td><button class="cbtn" onclick="closePos('${p.id}','${p.symbol}','${p.side}','${p.size}')">${ar?'إغلاق':'CLOSE'}</button></td>
-          </tr>`;
-        }).join('')
-      }</tbody></table>`;
-    }else{
-      cntEl.style.display='none';
-      if(!c.querySelector('.nopos'))c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد صفقات مفتوحة':'▸ NO OPEN POSITIONS'}</div>`;
+  try{
+    const r = await fetch(`${API}/api/account/positions`, {headers:{Authorization:'Bearer '+token}});
+    const d = await r.json();
+    if(ct !== 'pos') return;
+
+    const cntEl = document.getElementById('posCnt');
+    const positions = d.positions || [];
+
+    if(positions.length === 0){
+      if(cntEl) cntEl.style.display = 'none';
+      c.innerHTML = `<div class="nopos">${ar?'▸ لا توجد صفقات مفتوحة':'▸ NO OPEN POSITIONS'}</div>`;
+      return;
     }
-  }catch(e){}
+
+    if(cntEl){
+      cntEl.style.display = 'inline';
+      cntEl.textContent = positions.length;
+    }
+
+    const heads = ar
+      ? ['السوق','الاتجاه','الحجم','الدخول','الحالي','التصفية','TP','SL','ر/خ','الهامش','إغلاق']
+      : ['MARKET','SIDE','SIZE','ENTRY','MARK','LIQ','TP','SL','PNL','MARGIN','CLOSE'];
+
+    let html = '<table class="ptbl"><thead><tr>';
+    heads.forEach(h => html += `<th>${h}</th>`);
+    html += '</tr></thead><tbody>';
+
+    positions.forEach(p => {
+      const pnl = parseFloat(p.unrealizedPnl || 0);
+      const mark = p.markPrice || (MK[p.symbol] && MK[p.symbol].price) || p.entryPrice;
+      const sideLabel = p.side === 'long' ? (ar?'شراء':'LONG') : (ar?'بيع':'SHORT');
+      html += `<tr>
+        <td style="font-weight:600">${p.symbol}-USD</td>
+        <td><span class="pbadge ${p.side}">${sideLabel}</span></td>
+        <td>${p.size}</td>
+        <td>${fp(p.entryPrice)}</td>
+        <td>${fp(mark)}</td>
+        <td style="color:var(--red2)">${fp(p.liquidationPrice)}</td>
+        <td style="color:${p.tpPrice?'var(--green2)':'var(--text3)'}">${p.tpPrice?fp(p.tpPrice):'—'}</td>
+        <td style="color:${p.slPrice?'var(--red2)':'var(--text3)'}">${p.slPrice?fp(p.slPrice):'—'}</td>
+        <td class="pnl ${pnl>=0?'up':'dn'}">${pnl>=0?'+':''}$${pnl.toFixed(2)}</td>
+        <td>$${parseFloat(p.margin||0).toFixed(2)}</td>
+        <td><button class="cbtn" onclick="closePos('${p.id}','${p.symbol}','${p.side}','${p.size}')">${ar?'إغلاق':'CLOSE'}</button></td>
+      </tr>`;
+    });
+
+    html += '</tbody></table>';
+    c.innerHTML = html;
+  }catch(e){
+    console.error('refreshPositions error:', e);
+  }
 }
 
 async function refreshOrders(){
@@ -1154,7 +1174,26 @@ loadMarkets().then(()=>{
 });
 setInterval(fetchPrices,3000);
 setInterval(renderOB,3000);
-setInterval(()=>{if(wlt){loadAccountSummary();if(ct==='pos')refreshPositions();else if(ct==='ord')refreshOrders();}},15000);
+
+// Force-refresh positions/orders every 5 seconds regardless of state
+setInterval(()=>{
+  const token = localStorage.getItem('nahaar_token');
+  if(!token) return;
+  if(ct === 'pos') refreshPositions();
+  else if(ct === 'ord') refreshOrders();
+  loadAccountSummary();
+}, 5000);
+
+// Force one refresh on initial load after a short delay
+setTimeout(()=>{
+  const token = localStorage.getItem('nahaar_token');
+  if(token){
+    userToken = token;
+    wlt = true;
+    if(ct === 'pos') refreshPositions();
+    loadAccountSummary();
+  }
+}, 1500);
 </script>
 </body>
 </html>
