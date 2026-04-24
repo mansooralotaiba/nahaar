@@ -1170,7 +1170,28 @@ function showTab(el,tab){
         }
       }).catch(()=>{});
   }else if(tab==='ord'){
-    c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد أوامر معلقة':'▸ NO OPEN ORDERS'}</div>`;
+    c.innerHTML=`<div class="nopos">${ar?'▸ جارٍ التحميل...':'▸ LOADING...'}</div>`;
+    fetch(`${API}/api/orders/open`,{headers:{Authorization:'Bearer '+userToken}})
+      .then(r=>r.json())
+      .then(d=>{
+        if(ct!=='ord')return;
+        if(d.orders&&d.orders.length>0){
+          const heads=ar?['السوق','الاتجاه','النوع','الحجم','السعر','الوقت','إلغاء']:['MARKET','SIDE','TYPE','SIZE','PRICE','TIME','CANCEL'];
+          c.innerHTML=`<table class="ptbl"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${
+            d.orders.map(o=>`<tr>
+              <td style="font-weight:600">${o.coin}-USD</td>
+              <td><span class="pbadge ${o.side==='B'?'long':'short'}">${o.side==='B'?(ar?'شراء':'LONG'):(ar?'بيع':'SHORT')}</span></td>
+              <td>${o.orderType||'LIMIT'}</td>
+              <td>${o.sz}</td>
+              <td>${fp(o.limitPx)}</td>
+              <td>${new Date(o.timestamp).toLocaleTimeString(ar?'ar':'en')}</td>
+              <td><button class="cbtn" onclick="cancelOrder('${o.coin}','${o.oid}')">${ar?'إلغاء':'CANCEL'}</button></td>
+            </tr>`).join('')
+          }</tbody></table>`;
+        }else{
+          c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد أوامر معلقة':'▸ NO OPEN ORDERS'}</div>`;
+        }
+      }).catch(()=>{c.innerHTML=`<div class="nopos">${ar?'▸ لا توجد أوامر معلقة':'▸ NO OPEN ORDERS'}</div>`;});
   }else if(tab==='his'){
     if(!wlt){c.innerHTML=`<div class="nopos">${ar?'▸ سجّل دخولك لعرض السجل':'▸ SIGN IN TO VIEW HISTORY'}</div>`;return;}
     fetch(`${API}/api/orders/history`,{headers:{Authorization:'Bearer '+userToken}})
@@ -1478,6 +1499,26 @@ async function loadAccountSummary(){
 
 // Refresh account summary every 15 seconds
 setInterval(()=>{if(wlt)loadAccountSummary();},30000);
+
+// ── CANCEL ORDER ──────────────────────────────────────
+async function cancelOrder(symbol, oid){
+  const ar=lang==='ar';
+  if(!confirm(ar?'إلغاء هذا الأمر؟':'Cancel this order?'))return;
+  try{
+    const r=await fetch(`${API}/api/orders/cancel`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+userToken},
+      body:JSON.stringify({symbol,oid:parseInt(oid)})
+    });
+    const d=await r.json();
+    if(d.success){
+      showToast(ar?'✓ تم إلغاء الأمر':'✓ ORDER CANCELLED','ok');
+      setTimeout(()=>showTab(document.querySelector('.btab.on'),'ord'),500);
+    }else{
+      showToast('❌ '+(d.error||'Failed'),'err');
+    }
+  }catch(e){showToast('❌ CONNECTION ERROR','err');}
+}
 
 // ── TOAST ─────────────────────────────────────────────
 function showToast(msg,type='ok'){
