@@ -1416,7 +1416,7 @@ async function refreshPositionsSilent(){
     }
   }catch(e){}
 }
-setInterval(refreshPositionsSilent, 10000);
+setInterval(refreshPositionsSilent, 20000);
 
 // ── ACCOUNT SUMMARY ──────────────────────────────────
 async function loadAccountSummary(){
@@ -1477,7 +1477,7 @@ async function loadAccountSummary(){
 }
 
 // Refresh account summary every 15 seconds
-setInterval(()=>{if(wlt)loadAccountSummary();},15000);
+setInterval(()=>{if(wlt)loadAccountSummary();},30000);
 
 // ── TOAST ─────────────────────────────────────────────
 function showToast(msg,type='ok'){
