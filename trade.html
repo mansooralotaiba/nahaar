@@ -566,9 +566,6 @@ html[dir=rtl] .toast{right:16px;}html[dir=ltr] .toast{left:16px;}
       </div>
     </div>
     <div class="chart-wrap" style="position:relative;">
-      <!-- Price line overlay -->
-      <canvas id="chartOverlay" class="chart-overlay"></canvas>
-      <div id="priceLabelContainer" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:11;"></div>
       <div class="tradingview-widget-container" style="width:100%;height:100%;">
         <iframe
           id="tvChart"
@@ -1386,7 +1383,7 @@ ${pnlDisplay?'Est PNL: '+pnlDisplay:''}`
       setTimeout(()=>{
         refreshPositionsSilent();
         loadAccountSummary();
-        updateChartLines();
+        
       },1500);
     }else{
       showToast('❌ '+(d.error||'Failed'),'err');
@@ -1481,136 +1478,6 @@ async function loadAccountSummary(){
 
 // Refresh account summary every 15 seconds
 setInterval(()=>{if(wlt)loadAccountSummary();},15000);
-
-// ── CHART PRICE LINES OVERLAY ────────────────────────
-let overlayLines = []; // {price, color, label, style}
-
-function drawPriceLines() {
-  const canvas = document.getElementById('chartOverlay');
-  const iframe = document.getElementById('tvChart');
-  const container = document.getElementById('priceLabelContainer');
-  if (!canvas || !iframe) return;
-
-  // Resize canvas to match iframe
-  const rect = iframe.getBoundingClientRect();
-  const wrapRect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = wrapRect.width;
-  canvas.height = wrapRect.height;
-
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (container) container.innerHTML = '';
-
-  if (!overlayLines.length) return;
-
-  // Get current price range from visible positions
-  const currentPrice = MK[sym]?.price || 0;
-  if (!currentPrice) return;
-
-  // Estimate price range (±15% from current price)
-  const priceRange = currentPrice * 0.30;
-  const minPrice = currentPrice - priceRange / 2;
-  const maxPrice = currentPrice + priceRange / 2;
-
-  // Map price to Y coordinate
-  const priceToY = (price) => {
-    const ratio = (maxPrice - price) / (maxPrice - minPrice);
-    return ratio * canvas.height * 0.85 + canvas.height * 0.05;
-  };
-
-  overlayLines.forEach(line => {
-    const y = priceToY(line.price);
-    if (y < 0 || y > canvas.height) return;
-
-    // Draw line
-    ctx.beginPath();
-    ctx.strokeStyle = line.color;
-    ctx.lineWidth = 1.5;
-    if (line.style === 'dashed') {
-      ctx.setLineDash([6, 4]);
-    } else {
-      ctx.setLineDash([]);
-    }
-    ctx.moveTo(0, y);
-    ctx.lineTo(canvas.width - 80, y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Draw label
-    const label = document.createElement('div');
-    label.className = 'price-line-label';
-    label.style.top = (y - 9) + 'px';
-    label.style.background = line.color;
-    label.style.color = '#000';
-    label.textContent = `${line.label}: $${parseFloat(line.price).toFixed(4)}`;
-    if (container) container.appendChild(label);
-  });
-}
-
-function updateChartLines() {
-  overlayLines = [];
-
-  // Add lines for open positions of current symbol
-  fetch(`${API}/api/account/positions`, {headers:{Authorization:'Bearer '+userToken}})
-    .then(r=>r.json())
-    .then(d=>{
-      if(!d.positions) return;
-      d.positions.filter(p=>p.symbol===sym).forEach(p=>{
-        // Entry price line
-        overlayLines.push({
-          price: parseFloat(p.entryPrice),
-          color: p.side==='long' ? '#28A060' : '#D64040',
-          label: p.side==='long' ? '▲ ENTRY' : '▼ ENTRY',
-          style: 'solid'
-        });
-
-        // Breakeven line (same as entry for now — could include fees)
-        const feePct = 0.0009; // 0.045% × 2 (open+close)
-        const breakeven = p.side==='long'
-          ? parseFloat(p.entryPrice) * (1 + feePct)
-          : parseFloat(p.entryPrice) * (1 - feePct);
-        overlayLines.push({
-          price: breakeven,
-          color: '#C8A84B',
-          label: '◆ BREAK',
-          style: 'dashed'
-        });
-
-        // Liquidation price
-        if (p.liquidationPrice && p.liquidationPrice > 0) {
-          overlayLines.push({
-            price: parseFloat(p.liquidationPrice),
-            color: '#FF4444',
-            label: '✕ LIQ',
-            style: 'dashed'
-          });
-        }
-      });
-
-      // Add TP/SL lines if set
-      const tp = document.getElementById('tpIn')?.value;
-      const sl = document.getElementById('slIn')?.value;
-      if (tp && parseFloat(tp) > 0) {
-        overlayLines.push({price: parseFloat(tp), color:'#35CC7A', label:'★ TP', style:'dashed'});
-      }
-      if (sl && parseFloat(sl) > 0) {
-        overlayLines.push({price: parseFloat(sl), color:'#FF5555', label:'✕ SL', style:'dashed'});
-      }
-
-      drawPriceLines();
-    })
-    .catch(()=>{});
-}
-
-// Redraw lines when price changes or symbol changes
-setInterval(()=>{if(wlt)updateChartLines();}, 5000);
-
-// Redraw on TP/SL input
-document.addEventListener('input', e=>{
-  if(e.target?.id==='tpIn'||e.target?.id==='slIn') {
-    setTimeout(updateChartLines, 200);
-  }
-});
 
 // ── TOAST ─────────────────────────────────────────────
 function showToast(msg,type='ok'){
